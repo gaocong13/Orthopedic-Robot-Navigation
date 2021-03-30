@@ -34,5 +34,5 @@ add_library(xreg_basic_math OBJECT ${XREG_CUR_LIB_HEADERS}
                                    xregBasicStats.cpp
                                    xregSampleUniformUnitVecs.cpp
                                    xregNDRange.cpp
-                                   xregLinAlgUtils.cpp)
-
+                                   xregLinAlgUtils.cpp
+                                   xregSpline.cpp)

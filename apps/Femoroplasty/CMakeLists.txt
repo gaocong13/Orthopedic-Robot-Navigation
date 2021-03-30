@@ -1,0 +1,7 @@
+#add_subdirectory(pelvis_femur_regi_multiview)
+add_subdirectory(device_regi_singleview)
+#add_subdirectory(femur_regi_singleview)
+#add_subdirectory(device_femur_regi_multiview)
+add_subdirectory(device_bb_pnp)
+#add_subdirectory(device_multiconfig_singleview)
+#add_subdirectory(device_handeye_calibration)

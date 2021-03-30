@@ -66,7 +66,7 @@ public:
   using RayCasterPtr  = std::shared_ptr<RayCaster>;
   using SimMetricPtr  = std::shared_ptr<ImgSimMetric2D>;
   using SimMetricList = std::vector<SimMetricPtr>;
-  
+
   using Scalar                   = CoordScalar;
   using ScalarList               = CoordScalarList;
   using ListOfScalarLists        = std::vector<ScalarList>;
@@ -105,7 +105,7 @@ public:
 
   /// \brief Destructor
   virtual ~Intensity2D3DRegi() = default;
-  
+
   // no copying
   Intensity2D3DRegi(const Intensity2D3DRegi&) = delete;
   Intensity2D3DRegi& operator=(const Intensity2D3DRegi&) = delete;
@@ -161,7 +161,7 @@ public:
   /// NOTE: This must be called after calling setup().
   void set_intermediate_frame(const FrameTransform& inter_frame, const bool wrt_vol,
                               const size_type vol_idx = kNPOS);
-  
+
   void set_intermediate_frame(DynRefFrameFn dyn_ref_frame_fn, const size_type vol_idx);
 
   /// \brief Sets the ray caster object to use
@@ -293,7 +293,7 @@ public:
   void set_penalty_fn(PenaltyFnPtr penalty_fn);
 
   PenaltyFnPtr penalty_fn();
-  
+
   // This should only be called after setup
   void set_img_sim_penalty_coefs(const Scalar img_sim_coeff,
                                  const Scalar penalty_fn_coeff);
@@ -308,13 +308,13 @@ public:
   const std::vector<bool>& intermediate_frames_wrt_vol() const;
 
   const FrameTransformList& intermediate_frames() const;
-  
+
   const FrameTransformList& regi_xform_guesses() const;
-  
+
   void add_begin_of_iter_callback(CallbackFn& fn);
 
   void reset_begin_of_iter_callbacks();
-  
+
   void add_end_of_iter_callback(CallbackFn& fn);
 
   void reset_end_of_iter_callbacks();
@@ -337,7 +337,7 @@ protected:
 
   virtual void obj_fn(const ListOfFrameTransformLists& frame_xforms_per_object,
                       const CamModelList* cams_per_proj,
-                      ScalarList* sim_vals_ptr); 
+                      ScalarList* sim_vals_ptr);
 
   /// \brief Objective function that computes DRRs and similarity metrics.
   ///
@@ -346,6 +346,19 @@ protected:
   /// opt_vec_space_vals[i][j][k] is the kth parameter of the jth SE(3) (projection) element for the ith object
   /// (*sim_vals_ptr)[j] is the computed similarity value corresponding to the jth projection element
   virtual void obj_fn(const ListOfListsOfScalarLists& opt_vec_space_vals,
+                      ScalarList* sim_vals_ptr);
+
+  virtual void device_obj_fn(const ListOfFrameTransformLists& frame_xforms_per_object,
+                      const CamModelList* cams_per_proj,
+                      ScalarList* sim_vals_ptr);
+
+  /// \brief Objective function that computes DRRs and similarity metrics.
+  ///
+  /// This should be called by the optimizer in some way, maybe not directly,
+  /// depending on the optimization interface.
+  /// opt_vec_space_vals[i][j][k] is the kth parameter of the jth SE(3) (projection) element for the ith object
+  /// (*sim_vals_ptr)[j] is the computed similarity value corresponding to the jth projection element
+  virtual void device_obj_fn(const ListOfListsOfScalarLists& opt_vec_space_vals,
                       ScalarList* sim_vals_ptr);
 
   /// \brief This should be called by the derived class before entering the main
@@ -523,7 +536,7 @@ protected:
 
   // each of these are called by begin_of_iteration()
   std::vector<CallbackFn> begin_of_iter_fns_;
-  
+
   // each of these are called by end_of_iteration()
   std::vector<CallbackFn> end_of_iter_fns_;
 
@@ -538,4 +551,3 @@ private:
 }  // xreg
 
 #endif
-

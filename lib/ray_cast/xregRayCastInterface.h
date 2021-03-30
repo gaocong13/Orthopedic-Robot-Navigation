@@ -56,6 +56,8 @@ public:
 
   using CamModelAssocList = std::vector<size_type>;
 
+  using ListOfFrameTransformLists = std::vector<FrameTransformList>;
+
   class UnsupportedOperationException { };
 
   enum InterpMethod
@@ -140,6 +142,14 @@ public:
   ///
   /// \see distribute_xforms_among_cam_models
   void distribute_xform_among_cam_models(const FrameTransform& xform_cam_to_itk_phys);
+
+
+  void distribute_xforms_among_cam_models_perdeviceview(const ListOfFrameTransformLists& xforms_cam_to_itk_phys, size_type vol_idx);
+
+  /// \brief Assign a single pose to each camera model.
+  ///
+  /// \see distribute_xforms_among_cam_models
+  void distribute_xform_among_cam_models_perdeviceview(const FrameTransformList& xform_cam_to_itk_phys, size_type vol_idx);
 
   /// \brief Sets the ray casting step size to be used
   ///
@@ -305,7 +315,7 @@ public:
   ///        next value computed by the next set of ray ray casting.
   ProjPixelStoreMethod proj_store_method() const;
 
-  /// \brief Update 2D pixel values by replacing/overwriting them. 
+  /// \brief Update 2D pixel values by replacing/overwriting them.
   void use_proj_store_replace_method();
 
   /// \brief Update 2D pixel values by accumulating them.
@@ -421,7 +431,7 @@ protected:
   /// e.g. when calling set_volume(), set_volumes()
   /// The default implementation is a no-op, however a sub-class, such as a GPU
   /// implementation, may be interested in providing its own implementation to
-  /// move things to device memory. 
+  /// move things to device memory.
   virtual void vols_changed() { }
 
   /// \brief Called whenever the camera models are changed
@@ -429,7 +439,7 @@ protected:
   /// e.g. when calling set_camera_model(), set_camera_models()
   /// The default implementation is a no-op, however a sub-class, such as a GPU
   /// implementation, may be interested in providing its own implementation to
-  /// move things to device memory. 
+  /// move things to device memory.
   virtual void camera_models_changed() { }
 };
 
@@ -481,7 +491,7 @@ class RayCasterSurRenderParamInterface : public RayCasterCollisionParamInterface
 public:
 
   RayCasterSurRenderParamInterface();
- 
+
   void set_sur_render_params(const RayCasterSurRenderShadingParams& sur_render_params);
 
   const RayCasterSurRenderShadingParams& surface_render_params() const;
@@ -512,10 +522,10 @@ public:
   bool stop_after_collision() const;
 
   void set_stop_after_collision(const bool stop_after_coll);
-  
+
 private:
 
-  CoordScalar occlusion_angle_thresh_rad_ = 7.5 * kDEG2RAD; 
+  CoordScalar occlusion_angle_thresh_rad_ = 7.5 * kDEG2RAD;
 
   bool stop_after_collision_ = true;
 };
@@ -525,7 +535,7 @@ private:
 /// This interface will compute ray casted projections at multiple views with
 /// multiple objects at arbitrary poses. There is one projection per view.
 ///
-/// 
+///
 /// A ray caster instance that has had volumes, cameras, maximum number of
 /// projections set, and allocated is required.
 /// It is assumed that the camera models share the same camera world frame,
@@ -560,7 +570,7 @@ struct SimpleRayCasterWrapperFn
   FrameTransformList cam_world_to_vols;
 
   FrameTransformList inter_frames;
-  
+
   BoolList inter_frames_wrt_vol;
 
   FrameTransformList ref_frames_cam_world_to_vol;
@@ -581,7 +591,7 @@ enum RayCastLineIntKernel
 class RayCastLineIntParamInterface
 {
 public:
-  
+
   RayCastLineIntKernel kernel_id() const;
 
   void set_kernel_id(const RayCastLineIntKernel k);

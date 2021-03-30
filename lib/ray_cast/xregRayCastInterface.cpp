@@ -37,7 +37,7 @@ void xreg::RayCaster::set_volume(VolPtr img_vol)
 void xreg::RayCaster::set_volumes(const VolList& vols)
 {
   vols_ = vols;
-  
+
   vols_changed();
 }
 
@@ -45,7 +45,7 @@ xreg::size_type xreg::RayCaster::num_vols() const
 {
   return vols_.size();
 }
-  
+
 xreg::size_type xreg::RayCaster::num_camera_models() const
 {
   return camera_models_.size();
@@ -85,7 +85,7 @@ xreg::RayCaster::camera_model_proj_associations() const
 {
   return cam_model_for_proj_;
 }
-  
+
 void xreg::RayCaster::set_camera_model_proj_associations(const CamModelAssocList& cam_model_for_proj)
 {
   xregASSERT(cam_model_for_proj.size() == num_projs_);
@@ -118,6 +118,38 @@ void xreg::RayCaster::distribute_xform_among_cam_models(const FrameTransform& xf
   distribute_xforms_among_cam_models(FrameTransformList(1, xform_cam_to_itk_phys));
 }
 
+void xreg::RayCaster::distribute_xforms_among_cam_models_perdeviceview(const ListOfFrameTransformLists& xforms_cam_to_itk_phys, size_type vol_idx)
+{
+  const size_type num_passed_xforms = xforms_cam_to_itk_phys[vol_idx].size();
+
+  const size_type num_cams = num_camera_models();
+
+  xregASSERT((num_passed_xforms * num_cams) == num_projs());
+
+  size_type global_proj_idx = 0;
+  for (size_type cam_idx = 0; cam_idx < num_cams; ++cam_idx)
+  {
+    for (size_type passed_proj_idx = 0; passed_proj_idx < num_passed_xforms; ++passed_proj_idx, ++global_proj_idx)
+    {
+      xforms_cam_to_itk_phys_[global_proj_idx] = xforms_cam_to_itk_phys[vol_idx + cam_idx][passed_proj_idx];
+      cam_model_for_proj_[global_proj_idx] = cam_idx;
+    }
+  }
+}
+
+void xreg::RayCaster::distribute_xform_among_cam_models_perdeviceview(const FrameTransformList& xforms_cam_to_itk_phys, size_type vol_idx)
+{
+  ListOfFrameTransformLists list_xforms_cam_to_itk_phys;
+  FrameTransformList temp_list;
+  for (size_type xform_idx=0; xform_idx<xforms_cam_to_itk_phys.size(); ++xform_idx)
+  {
+    temp_list.push_back(xforms_cam_to_itk_phys[xform_idx]);
+    list_xforms_cam_to_itk_phys.push_back(temp_list);
+    temp_list.clear();
+  }
+  distribute_xforms_among_cam_models_perdeviceview(list_xforms_cam_to_itk_phys, vol_idx);
+}
+
 void xreg::RayCaster::set_ray_step_size(const CoordScalar& step_size)
 {
   ray_step_size_ = step_size;
@@ -137,7 +169,7 @@ void xreg::RayCaster::set_num_projs(const size_type num_projs)
 
   cam_model_for_proj_.resize(num_projs_);
 }
-  
+
 xreg::size_type xreg::RayCaster::num_projs() const
 {
   return num_projs_;
@@ -147,7 +179,7 @@ void xreg::RayCaster::set_interp_method(const InterpMethod& interp_method)
 {
   interp_method_ = interp_method;
 }
-  
+
 xreg::RayCaster::InterpMethod xreg::RayCaster::interp_method() const
 {
   return interp_method_;
@@ -178,7 +210,7 @@ void xreg::RayCaster::set_xforms_cam_to_itk_phys(const FrameTransformList& xform
   set_num_projs(xforms.size());
   xforms_cam_to_itk_phys_ = xforms;
 }
-  
+
 const xreg::FrameTransformList&
 xreg::RayCaster::xforms_cam_to_itk_phys() const
 {
@@ -295,7 +327,7 @@ void xreg::RayCaster::use_proj_store_accum_method()
 {
   proj_store_meth_ = kRAY_CAST_PIXEL_ACCUM;
 }
-  
+
 xreg::RayCastSyncOCLBuf* xreg::RayCaster::to_ocl_buf()
 {
   throw UnsupportedOperationException();
@@ -348,7 +380,7 @@ void xreg::RayCaster::set_default_bg_pixel_val(const PixelScalar2D bg_val)
 {
   default_bg_pixel_val_ = bg_val;
 }
-  
+
 void xreg::RayCasterCollisionParamInterface::set_render_thresh(const PixelScalar t)
 {
   collision_params_.thresh = t;
@@ -375,7 +407,7 @@ xreg::RayCasterCollisionParamInterface::collision_params() const
 {
   return collision_params_;
 }
-  
+
 xreg::RayCasterSurRenderParamInterface::RayCasterSurRenderParamInterface()
 {
   set_render_thresh(200);
@@ -421,7 +453,7 @@ void xreg::RayCasterSurRenderParamInterface::set_alpha_shininess(const PixelScal
 {
   sur_render_params_.alpha_shininess = alpha;
 }
-  
+
 xreg::RayCasterOccludingContours::RayCasterOccludingContours()
 {
   this->set_render_thresh(150);
@@ -529,7 +561,7 @@ void xreg::SimpleRayCasterWrapperFn::operator()()
 
   // restore the previous ray caster state
   ray_caster->set_num_projs(prev_num_projs);
-  ray_caster->set_camera_model_proj_associations(cam_assocs); 
+  ray_caster->set_camera_model_proj_associations(cam_assocs);
 }
 
 xreg::RayCastLineIntKernel xreg::RayCastLineIntParamInterface::kernel_id() const
@@ -541,4 +573,3 @@ void xreg::RayCastLineIntParamInterface::set_kernel_id(const RayCastLineIntKerne
 {
   kernel_id_ = k;
 }
-

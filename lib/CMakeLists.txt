@@ -41,7 +41,8 @@ set(XREG_LIB_SUB_DIRS common
                       hip_surgery
                       ray_cast
                       opencl
-                      version)
+                      version
+                      bigssMath)
 
 # build up the list of include directories for the xreg library
 set(XREG_LIB_INC_DIRS)
@@ -68,13 +69,13 @@ foreach (XREG_CUR_LIB_DIR ${XREG_LIB_SUB_DIRS})
 
   target_include_directories(xreg_${XREG_CUR_LIB_DIR} PRIVATE ${XREG_LIB_INC_DIRS})
   target_include_directories(xreg_${XREG_CUR_LIB_DIR} SYSTEM PUBLIC ${XREG_EXT_LIB_INC_DIRS})
-  
+
   target_link_libraries(xreg_${XREG_CUR_LIB_DIR}
                         PUBLIC ${XREG_EXT_LIBS_TO_LINK} ${XREG_THIRD_PARTY_DEPS})
-  
+
   if (WIN32)
     target_compile_definitions(xreg_${XREG_CUR_LIB_DIR} PUBLIC BOOST_CHRONO_HEADER_ONLY)
-  endif ()  
+  endif ()
 
   # add to the list of all of the object files created
   list(APPEND XREG_LIB_OBJS $<TARGET_OBJECTS:xreg_${XREG_CUR_LIB_DIR}>)
@@ -85,7 +86,7 @@ add_library(xreg ${XREG_LIB_OBJS})
 
 if (WIN32)
     target_compile_definitions(xreg PUBLIC BOOST_CHRONO_HEADER_ONLY)
-endif () 
+endif ()
 
 # IMPORTANT NOTE: Since we are providing a list of include directories,
 # the $<BUILD_INTERFACE:${XREG_LIB_INC_DIRS}> must be surrounded by quotes.
@@ -101,4 +102,3 @@ target_link_libraries(xreg PUBLIC ${XREG_EXT_LIBS_TO_LINK} ${XREG_THIRD_PARTY_DE
 
 file(GLOB_RECURSE XREG_ALL_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 set_target_properties(xreg PROPERTIES PUBLIC_HEADER "${XREG_ALL_HEADERS}")
-
