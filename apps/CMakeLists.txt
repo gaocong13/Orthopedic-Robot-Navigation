@@ -29,4 +29,5 @@ add_subdirectory(Regi2D3D-IPCAI2020)
 add_subdirectory(Generalization)
 add_subdirectory(Snake_Registration)
 add_subdirectory(Femoroplasty)
+add_subdirectory(Spine)
 
