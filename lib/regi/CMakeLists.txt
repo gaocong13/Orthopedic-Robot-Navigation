@@ -66,7 +66,7 @@ add_library(xreg_regi OBJECT ${XREG_CUR_LIB_HEADERS}
                              interfaces_2d_3d/xregIntensity2D3DRegi.cpp
                              interfaces_2d_3d/xregIntensity2D3DRegiDebug.cpp
                              interfaces_2d_3d/xregIntensity2D3DRegiCMAES.cpp
-			     #interfaces_2d_3d/xregIntensity2D3DRegiCMAES-Device-MultiConfig.cpp
+			     interfaces_2d_3d/xregIntensity2D3DRegiCMAES-Device-MultiConfig.cpp
                              interfaces_2d_3d/xregIntensity2D3DRegiDiffEvo.cpp
                              interfaces_2d_3d/xregIntensity2D3DRegiPSO.cpp
                              interfaces_2d_3d/xregIntensity2D3DRegiExhaustive.cpp

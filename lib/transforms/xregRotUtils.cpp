@@ -57,9 +57,9 @@ xreg::Mat3x3List xreg::SkewMatrices(const Pt3List& pts)
       skews[i] = SkewMatrix(pts[i]);
     }
   };
-  
+
   ParallelFor(skew_fn, RangeType(0, num_pts));
-  
+
   return skews;
 }
 
@@ -82,7 +82,7 @@ xreg::Mat3x3 xreg::ExpSO3(const Mat3x3& W)
 {
   // verify the input is skew-symmetric
   xregASSERT((W + W.transpose()).norm() < 1.0e-4);
-  
+
   Mat3x3 R = Mat3x3::Identity();
 
   const CoordScalar theta = WedgeSkew(W).norm();
@@ -100,7 +100,7 @@ xreg::Mat3x3 xreg::ExpSO3(const Mat3x3& W)
   // in reality various numerical issues can cause these to be slightly off.
   //xregASSERT(std::abs(R.determinant() - 1) < 1.0e-8);
   //xregASSERT(((R.transpose() * R) - Mat3x3::Identity()).norm() < 1.0e-8);
-  
+
   return R;
 }
 
@@ -121,7 +121,7 @@ xreg::Pt3 xreg::LogSO3ToPt(const Mat3x3& R)
   {
     x.setZero();
   }
-  
+
   return x;
 }
 
@@ -161,7 +161,7 @@ xreg::Mat3x3 xreg::QuatToRotMat(const Pt4& q)
   r(2,0) = 2 * (q_x_q_z - q_0_q_y);
   r(2,1) = 2 * (q_y_q_z + q_0_q_x);
   r(2,2) = q_0_sq - q_x_sq - q_y_sq + q_z_sq;
-  
+
   return r;
 }
 
@@ -228,7 +228,7 @@ xreg::RotMatrixToEulerXYZ(const Mat3x3& R)
       theta_x = std::atan2(-R(0,1), R(1,1));
     }
   }
-  
+
   return std::make_tuple(theta_x, theta_y, theta_z);
 }
 
@@ -385,7 +385,7 @@ xreg::Mat3x3 xreg::FindClosestRot(const Mat3x3& A)
 
   CoordScalar min_abs_sv = std::numeric_limits<CoordScalar>::max();
   unsigned long min_abs_sv_idx = 0;
-  
+
   for (unsigned long i = 0; i < 3; ++i)
   {
     const CoordScalar cur_sv = svd.singularValues()[i];
@@ -401,7 +401,7 @@ xreg::Mat3x3 xreg::FindClosestRot(const Mat3x3& A)
 
     sgn[i] = (cur_sv > 1.0e-8) ? CoordScalar(1) : CoordScalar(-1);
   }
- 
+
   if ((det_U * det_V * sgn[0] * sgn[1] * sgn[2]) < -1.0e-8)
   {
     sgn[min_abs_sv_idx] *= CoordScalar(-1);
@@ -414,4 +414,3 @@ xreg::Mat3x3 xreg::FindClosestRot(const Mat3x3& A)
 
   return svd.matrixU() * new_sigma * svd.matrixV().transpose();
 }
-

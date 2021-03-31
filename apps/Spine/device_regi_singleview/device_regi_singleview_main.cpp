@@ -111,8 +111,8 @@ int main(int argc, char* argv[])
   auto device_3d_fcsv = ReadFCSVFileNamePtMap(device_3d_fcsv_path);
   ConvertRASToLPS(&device_3d_fcsv);
 
-  const std::string devicevol_path = "/home/cong/Research/Spine/CadaverNeedleInjection/Device_crop.nii.gz";
-  const std::string deviceseg_path = "/home/cong/Research/Spine/CadaverNeedleInjection/Device_crop_seg.nii.gz";
+  const std::string devicevol_path = "/home/cong/Research/Spine/CadaverNeedleInjection/meta_data/Device_crop_CT.nii.gz";
+  const std::string deviceseg_path = "/home/cong/Research/Spine/CadaverNeedleInjection/meta_data/Device_crop_seg.nii.gz";
 
   const bool use_seg = true;
   auto device_seg = ReadITKImageFromDisk<itk::Image<unsigned char,3>>(deviceseg_path);
@@ -349,6 +349,13 @@ int main(int argc, char* argv[])
       vout << std::endl << "Running device registration for image " + exp_ID + " ..." << std::endl;
       regi.run();
       regi.levels[0].regis[0].fns_to_call_right_before_regi_run.clear();
+
+      if (kSAVE_REGI_DEBUG)
+      {
+        vout << "writing debug info to disk..." << std::endl;
+        const std::string dst_debug_path = output_path + "/debug_device" + exp_ID + ".h5";  
+        WriteMultiLevel2D3DRegiDebugToDisk(*regi.debug_info, dst_debug_path);
+      }
 
       {
         auto ray_caster = LineIntRayCasterFromProgOpts(po);

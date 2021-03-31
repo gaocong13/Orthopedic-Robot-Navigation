@@ -115,18 +115,19 @@ int main(int argc, char* argv[])
 
   const std::string device_2d_fcsv_root_path  = po.pos_args()[0];  // 2D Landmark root path
   const std::string device_3d_fcsv_path       = po.pos_args()[1];  // 3D device landmarks path
-  const std::string UR_kins_path              = po.pos_args()[2];  // UR kinematics path
-  const std::string dicom_path                = po.pos_args()[3];  // Dicom image path
-  const std::string output_path               = po.pos_args()[4];  // Output path
-  const std::string exp_list_path             = po.pos_args()[5];  // Experiment list file path
+  const std::string device_3d_bb_fcsv_path    = po.pos_args()[2];  // 3D device BB
+  const std::string UR_kins_path              = po.pos_args()[3];  // UR kinematics path
+  const std::string dicom_path                = po.pos_args()[4];  // Dicom image path
+  const std::string output_path               = po.pos_args()[5];  // Output path
+  const std::string exp_list_path             = po.pos_args()[6];  // Experiment list file path
 
   std::cout << "reading device BB landmarks from FCSV file..." << std::endl;
   auto device_3d_fcsv = ReadFCSVFileNamePtMap(device_3d_fcsv_path);
   ConvertRASToLPS(&device_3d_fcsv);
 
-  const std::string handeye_X_path = "/home/cong/Research/Spine/CadaverNeedleInjection/Device_crop.nii.gz";
-  const std::string devicevol_path = "/home/cong/Research/Spine/CadaverNeedleInjection/Device_crop.nii.gz";
-  const std::string deviceseg_path = "/home/cong/Research/Spine/CadaverNeedleInjection/Device_crop_seg.nii.gz";
+  const std::string handeye_X_path = "/home/cong/Research/Spine/Handeye_Calibration/devicehandeye_X.h5";
+  const std::string devicevol_path = "/home/cong/Research/Spine/CadaverNeedleInjection/meta_data/Device_crop_CT.nii.gz";
+  const std::string deviceseg_path = "/home/cong/Research/Spine/CadaverNeedleInjection/meta_data/Device_crop_seg.nii.gz";
 
   FrameTransform device_rotcen_ref = FrameTransform::Identity();
   {
@@ -233,14 +234,27 @@ int main(int argc, char* argv[])
   std::vector<CIOSFusionDICOMInfo> devicecios_metas(num_views);
   for(size_type view_idx = 0; view_idx < num_views; ++view_idx)
   {
+    vout << "Reading image " << exp_ID_list[view_idx] << std::endl;
     const std::string img_path = dicom_path + "/" + exp_ID_list[view_idx];
-    std::tie(proj_pre_proc.input_projs[0].img, devicecios_metas[0]) = ReadCIOSFusionDICOMFloat(img_path);
-    proj_pre_proc.input_projs[0].cam = NaiveCamModelFromCIOSFusion(devicecios_metas[0], true);
+    std::tie(proj_pre_proc.input_projs[view_idx].img, devicecios_metas[view_idx]) = ReadCIOSFusionDICOMFloat(img_path);
+    proj_pre_proc.input_projs[view_idx].cam = NaiveCamModelFromCIOSFusion(devicecios_metas[view_idx], true);
   }
-
+  vout << "Preprocesing images ..." << std::endl;
   proj_pre_proc();
 
   auto& projs_to_regi = proj_pre_proc.output_projs;
+  // Create Debug Proj H5 File
+  std::string joint_expID = "";
+  for(size_type view_idx = 0;view_idx < num_views; ++view_idx)
+  {
+    joint_expID += "_" + exp_ID_list[view_idx];
+  }
+  const std::string proj_data_h5_path = output_path + "/proj_data" + joint_expID + ".h5";
+  vout << "creating H5 proj data file ..." << std::endl;
+  H5::H5File h5(proj_data_h5_path, H5F_ACC_TRUNC);
+  WriteProjDataH5(proj_pre_proc.output_projs, &h5);
+  h5.flush(H5F_SCOPE_GLOBAL);
+  h5.close();
 
   // ###################### Multi-configuration initialization ###############################
   Pt3 ld_3D_pt_init, ld2_3D_pt_init;
@@ -254,6 +268,7 @@ int main(int argc, char* argv[])
   std::vector<Pt3> ld_3D_pt_init_list;
   FrameTransform handeye_regi_X = ReadITKAffineTransformFromFile(handeye_X_path);
 
+  vout << "Reading URkins..." << std::endl;
   FrameTransformList UReef_xform_list;
   for(size_type view_idx = 0; view_idx < num_views; ++view_idx)
   {
@@ -316,8 +331,6 @@ int main(int argc, char* argv[])
     }
   }
 
-  // Average over all points
-
   // Define a refernece frame at the center of ld1_3D_pts
   FrameTransform initref_xform = FrameTransform::Identity();
   initref_xform(0,3) = -(initref_minX + initref_maxX)/2;
@@ -335,6 +348,7 @@ int main(int argc, char* argv[])
     }
   }
 
+  vout << "Calculating PnP initial pose..." << std::endl;
   const FrameTransform lands_cam_to_initref = PnPPOSITAndReprojCMAES(default_cam, pnp_vol_lands, pnp_img_lands);
 
   bool is_first_view = true;
@@ -354,6 +368,7 @@ int main(int argc, char* argv[])
 
   regi.init_cam_to_vols = { };
 
+  vout << "Setting up registration initial poses..." << std::endl;
   for(size_type view_idx = 0; view_idx < num_views; ++view_idx)
   {
     FrameTransform init_cam_wrt_device = handeye_ref_xform.inverse() * handeye_regi_X.inverse() * UReef_xform_list[view_idx].inverse()
@@ -376,13 +391,11 @@ int main(int argc, char* argv[])
     }
   }
 
+  regi.fixed_proj_data = proj_pre_proc.output_projs;
+
   device_singleview_regi_ref_frame->cam_extrins = regi.fixed_proj_data[0].cam.extrins;
 
   auto se3_vars = std::make_shared<SE3OptVarsLieAlg>();
-
-  const size_type view_idx = 0;
-
-  regi.fixed_proj_data = proj_pre_proc.output_projs;
 
   regi.levels.resize(1);
 
@@ -390,13 +403,12 @@ int main(int argc, char* argv[])
 
   lvl.ds_factor = 0.25;
 
-  lvl.fixed_imgs_to_use = { view_idx };
-
   lvl.ray_caster = LineIntRayCasterFromProgOpts(po);
 
   lvl.fixed_imgs_to_use.resize(num_views);
   std::iota(lvl.fixed_imgs_to_use.begin(), lvl.fixed_imgs_to_use.end(), 0);
 
+  vout << "Setting up similarity metrics..." << std::endl;
   for (size_type view_idx = 0; view_idx < num_views; ++view_idx)
   {
     auto sm = PatchGradNCCSimMetricFromProgOpts(po);
@@ -438,7 +450,7 @@ int main(int argc, char* argv[])
 
     {
       auto cmaes_regi = std::make_shared<Intensity2D3DRegiCMAESdeviceMultiConfig>();
-      /*
+
       cmaes_regi->set_opt_vars(se3_vars);
       cmaes_regi->set_opt_x_tol(0.01);
       cmaes_regi->set_opt_obj_fn_tol(0.01);
@@ -450,25 +462,60 @@ int main(int argc, char* argv[])
 
       auto pen_fn = std::make_shared<Regi2D3DPenaltyFnSE3Mag>();
 
-      pen_fn->rot_pdfs_per_obj   = { std::make_shared<FoldNormDist>(2.5 * kDEG2RAD, 2.5 * kDEG2RAD) };
-      pen_fn->trans_pdfs_per_obj = { std::make_shared<FoldNormDist>(5, 5) };
+      pen_fn->rot_pdfs_per_obj   = { };
+      pen_fn->trans_pdfs_per_obj = { };
+      for(size_type view_idx = 0; view_idx < num_views; ++view_idx)
+      {
+        pen_fn->rot_pdfs_per_obj.push_back( std::make_shared<FoldNormDist>(2.5 * kDEG2RAD, 2.5 * kDEG2RAD) );
+        pen_fn->trans_pdfs_per_obj.push_back( std::make_shared<FoldNormDist>(5, 5) );
+      }
 
       cmaes_regi->set_pop_size(20);
       cmaes_regi->set_sigma({ 2.5 * kDEG2RAD, 2.5 * kDEG2RAD, 2.5 * kDEG2RAD, 2.5, 2.5, 25 });
 
       cmaes_regi->set_penalty_fn(pen_fn);
       cmaes_regi->set_img_sim_penalty_coefs(0.9, 1.0);
-      */
 
       lvl_regi_coarse.regi = cmaes_regi;
     }
-    vout << std::endl << "First view spine coarse registration ..." << std::endl;
-    regi.run();
-    regi.levels[0].regis[0].fns_to_call_right_before_regi_run.clear();
-
   }
 
-  const std::string device_3d_bb_fcsv_path = "/Users/gaocong/Documents/Research/Femoroplasty/Phantom_Drilling/meta_data/Device3Dbb.fcsv";
+  if (kSAVE_REGI_DEBUG )
+  {
+    vout << "  setting regi debug info..." << std::endl;
+
+    DebugRegiResultsMultiLevel::VolPathInfo debug_vol_path;
+    debug_vol_path.vol_path = devicevol_path;
+
+    if (use_seg)
+    {
+      debug_vol_path.label_vol_path = deviceseg_path;
+      debug_vol_path.labels_used    = { device_label };
+    }
+
+    regi.debug_info->vols = { debug_vol_path };
+
+    DebugRegiResultsMultiLevel::ProjDataPathInfo debug_proj_path;
+    debug_proj_path.path = proj_data_h5_path;
+    // debug_proj_path.projs_used = { view_idx };
+
+    regi.debug_info->fixed_projs = debug_proj_path;
+
+    regi.debug_info->proj_pre_proc_info = proj_pre_proc.params;
+
+    regi.debug_info->regi_names = { { "Multiconfig DeviceRegi" + joint_expID } };
+  }
+
+  vout << std::endl << "Running registration ..." << std::endl;
+  regi.run();
+  regi.levels[0].regis[0].fns_to_call_right_before_regi_run.clear();
+
+  if (kSAVE_REGI_DEBUG)
+  {
+    vout << "writing debug info to disk..." << std::endl;
+    const std::string dst_debug_path = output_path + "/debug_device" + joint_expID + ".h5";
+    WriteMultiLevel2D3DRegiDebugToDisk(*regi.debug_info, dst_debug_path);
+  }
 
   std::cout << "reading device BB landmarks from FCSV file..." << std::endl;
   auto device_3d_bb_fcsv = ReadFCSVFileNamePtMap(device_3d_bb_fcsv_path);

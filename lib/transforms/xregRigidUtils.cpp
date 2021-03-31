@@ -29,9 +29,9 @@
 xreg::Mat4x4 xreg::SE3Inv(const Mat4x4& T)
 {
   Mat4x4 T_inv = Mat4x4::Identity();
-  
+
   T_inv.block(0,0,3,3) = T.block(0,0,3,3).transpose();
-  
+
   T_inv.block(0,3,3,1) = -1 * T_inv.block(0,0,3,3) * T.block(0,3,3,1);
 
   return T_inv;
@@ -67,14 +67,14 @@ xreg::Mat4x4 xreg::ExpSE3(const Mat4x4& M)
     // no special processing on the translation part in the Lie algebra
     T.block(0,3,3,1) = v;
   }
-  
+
   return T;
 }
 
 xreg::Mat4x4 xreg::ExpSE3(const Pt6& x)
 {
   Mat4x4 M = Mat4x4::Zero();
-  
+
   M.block(0,0,3,3) = SkewMatrix(x.head(3));
 
   M(0,3) = x(3);
@@ -84,13 +84,23 @@ xreg::Mat4x4 xreg::ExpSE3(const Pt6& x)
   return ExpSE3(M);
 }
 
+xreg::Pt6 xreg::ExpRigid4x4ToPt6(const Mat4x4& T)
+{
+  Pt6 x;
+  Mat4x4 M = LogSE3ToMat4x4(T);
+  x.head(3) = WedgeSkew(T.block(0,0,3,3));
+  x.tail(3) = T.block(0,3,3,1);
+
+  return x;
+}
+
 xreg::Mat4x4 xreg::LogSE3ToMat4x4(const Mat4x4& T)
 {
   Mat4x4 M = Mat4x4::Zero();
 
   const Pt3    v = LogSO3ToPt(T.block(0,0,3,3));
   const Mat3x3 W = SkewMatrix(v);
-  
+
   M.block(0,0,3,3) = W;
 
   const Pt3 trans = T.block(0,3,3,1);
@@ -114,7 +124,7 @@ xreg::Mat4x4 xreg::LogSE3ToMat4x4(const Mat4x4& T)
     // the Lie algebra
     M.block(0,3,3,1) = trans;
   }
-  
+
   return M;
 }
 
@@ -368,4 +378,3 @@ xreg::RigidXformToEulerXYZAndTrans(const FrameTransform& xform)
   return std::make_tuple(std::get<0>(rot_angs), std::get<1>(rot_angs), std::get<2>(rot_angs),
                          xform.matrix()(0,3), xform.matrix()(1,3), xform.matrix()(2,3));
 }
-

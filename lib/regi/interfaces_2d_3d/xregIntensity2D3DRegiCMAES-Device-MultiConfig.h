@@ -42,9 +42,7 @@ namespace xreg
 class Intensity2D3DRegiCMAESdeviceMultiConfig : public Intensity2D3DRegi
 {
 public:
-  using ListofTransformVec = std::vector<std::vector<float>>;
-  using Pt6                = Eigen::Matrix<float,6,1>;
-  using Matrix4x4          = Eigen::Matrix<float,4,4>;
+  using ListofTransformVec = std::vector<std::vector<double>>;
 
   // Handeye X transformation
   FrameTransform handeyeX_xform_ = FrameTransform::Identity();

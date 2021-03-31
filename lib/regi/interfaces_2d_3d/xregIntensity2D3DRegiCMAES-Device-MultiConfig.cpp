@@ -32,6 +32,8 @@
 
 #include "xregIntensity2D3DRegiDebug.h"
 #include "xregSE3OptVars.h"
+#include "xregRigidUtils.h"
+#include "xregRotUtils.h"
 #include "xregHDF5.h"
 #include "xregImgSimMetric2D.h"
 #include "xregFilesystemUtils.h"
@@ -39,9 +41,8 @@
 #include "xregITKOpenCVUtils.h"
 #include "xregOpenCVUtils.h"
 
-using ListofTransformVec = std::vector<std::vector<float>>;
-using Pt6                = Eigen::Matrix<float,6,1>;
-using Matrix4x4          = Eigen::Matrix<float,4,4>;
+using ListofTransformVec = std::vector<std::vector<double>>;
+using TransformVec = std::vector<double>;
 
 xreg::Intensity2D3DRegiCMAESdeviceMultiConfig::Intensity2D3DRegiCMAESdeviceMultiConfig()
 {
@@ -108,9 +109,9 @@ ListofTransformVec xreg::Intensity2D3DRegiCMAESdeviceMultiConfig::Convert_optpar
   const size_type num_params_per_xform  = this->opt_vars_->num_params();
   const size_type device_paramoff       = num_params_per_xform;
 
-  Pt6 device_pt6, initref_pt6;
-  std::vector<float> device_vec(num_params_per_xform), initref_vec(num_params_per_xform);
-  Matrix4x4 initref_delta_matrix;
+  xreg::Pt6 device_pt6, initref_pt6;
+  TransformVec device_vec(num_params_per_xform), initref_vec(num_params_per_xform);
+  xreg::Mat4x4 initref_delta_matrix;
   FrameTransform initref_delta_xform, URloop_carm_to_device;
 
   initref_vec.assign(opt_params, opt_params + device_paramoff);
@@ -119,8 +120,7 @@ ListofTransformVec xreg::Intensity2D3DRegiCMAESdeviceMultiConfig::Convert_optpar
     initref_pt6[idx] = initref_vec[idx];
   }
   // delta matrix in reference frame
-  ExpPt6ToRigid4x4(initref_pt6, &initref_delta_matrix);
-  initref_delta_xform.matrix() = initref_delta_matrix;
+  initref_delta_xform.matrix() = xreg::ExpSE3(initref_pt6);
 
   for (size_type view_idx = 0; view_idx < num_views; ++view_idx)
   {
@@ -130,7 +130,7 @@ ListofTransformVec xreg::Intensity2D3DRegiCMAESdeviceMultiConfig::Convert_optpar
     // Each view device transformation
     FrameTransform device_init_xform = this->intermediate_frames_[view_idx].inverse() * this->regi_xform_guesses_[view_idx].inverse() * URloop_carm_to_device * this->intermediate_frames_[view_idx];
 
-    ExpRigid4x4ToPt6(device_init_xform.matrix(), device_pt6);
+     device_pt6 = xreg::ExpRigid4x4ToPt6(device_init_xform.matrix());
 
     device_vec.clear();
 
@@ -427,7 +427,7 @@ void xreg::Intensity2D3DRegiCMAESdeviceMultiConfig::debug_write_opt_pose_vars()
 
   const double* cur_params = get_cmaes_cur_params_buf();
 
-  ScalarList cmaes_cur_params_list = {};
+  std::vector<double> cmaes_cur_params_list = {};
 
   auto multi_device_vec = Convert_optparams_to_device_xformvec(cur_params);
 
@@ -435,7 +435,7 @@ void xreg::Intensity2D3DRegiCMAESdeviceMultiConfig::debug_write_opt_pose_vars()
   {
     for(size_type idx = 0; idx < num_params_per_xform; ++idx)
     {
-      cmaes_cur_params_list.push_back(multi_device_vec[vol_idx][idx]);
+      cmaes_cur_params_list.push_back(static_cast<double>(multi_device_vec[vol_idx][idx]));
     }
   }
 
