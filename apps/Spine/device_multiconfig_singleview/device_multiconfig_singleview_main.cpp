@@ -490,10 +490,18 @@ int main(int argc, char* argv[])
     if (use_seg)
     {
       debug_vol_path.label_vol_path = deviceseg_path;
-      debug_vol_path.labels_used    = { device_label };
+      debug_vol_path.labels_used    = { };
+      for(size_type view_idx = 0; view_idx < num_views; ++view_idx)
+      {
+        debug_vol_path.labels_used.push_back( device_label );
+      }
     }
 
-    regi.debug_info->vols = { debug_vol_path };
+    regi.debug_info->vols = {  };
+    for(size_type view_idx = 0; view_idx < num_views; ++view_idx)
+    {
+      regi.debug_info->vols.push_back( debug_vol_path );
+    }
 
     DebugRegiResultsMultiLevel::ProjDataPathInfo debug_proj_path;
     debug_proj_path.path = proj_data_h5_path;

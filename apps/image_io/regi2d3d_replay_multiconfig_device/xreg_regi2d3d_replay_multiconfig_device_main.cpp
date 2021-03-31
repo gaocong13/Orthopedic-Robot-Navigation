@@ -79,8 +79,6 @@ void ComputeProjs(RayCaster& rc, const FrameTransformList& poses, const IndexLis
     const size_type cur_obj_idx = vol_inds[vol_idx];
     xregASSERT(cur_obj_idx < poses.size());
 
-    std::cout << "poses size:" << poses.size() << std::endl;
-
     rc.distribute_xform_among_cam_models_perdeviceview(poses, vol_idx);
 
     rc.compute(cur_obj_idx);
