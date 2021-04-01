@@ -113,16 +113,34 @@ int main(int argc, char* argv[])
   const bool verbose = po.get("verbose");
   std::ostream& vout = po.vout();
 
-  const std::string device_3d_fcsv_path       = po.pos_args()[0];  // 2D Landmark root path
-  const std::string device_3d_bb_fcsv_path    = po.pos_args()[1];  // 3D device landmarks path
-  const std::string refdevice_xform_file_path = po.pos_args()[2];
-  const std::string refUR_kins_path           = po.pos_args()[3];
-  const std::string handeye_regi_file_path    = po.pos_args()[4];
-  const std::string UR_kins_path              = po.pos_args()[5];
-  const std::string exp_list_path             = po.pos_args()[6];  // Experiment list file path
-  const std::string dicom_path                = po.pos_args()[7];  // Dicom image path
-  const std::string output_path               = po.pos_args()[8];  // Output path
+  const std::string meta_data_path            = po.pos_args()[0];  // 2D Landmark root path
+  const std::string refdevice_xform_file_path = po.pos_args()[1];
+  const std::string refUR_kins_path           = po.pos_args()[2];
+  const std::string handeye_regi_file_path    = po.pos_args()[3];
+  const std::string UR_kins_path              = po.pos_args()[4];
+  const std::string exp_list_path             = po.pos_args()[5];  // Experiment list file path
+  const std::string dicom_path                = po.pos_args()[6];  // Dicom image path
+  const std::string output_path               = po.pos_args()[7];  // Output path
 
+  const bool reproj_drr = false;
+
+  const std::string device_3d_fcsv_path       = meta_data_path + "/Device3Dlandmark.fcsv";
+  const std::string device_3d_bb_fcsv_path    = meta_data_path + "/Device3Dbb.fcsv";
+
+  const std::string devicevol_path = meta_data_path + "/Device_crop_CT.nii.gz";
+  const std::string deviceseg_path = meta_data_path + "/Device_crop_seg.nii.gz";
+  auto device_seg = ReadITKImageFromDisk<itk::Image<unsigned char,3>>(deviceseg_path);
+
+  vout << "reading device volume..." << std::endl; // We only use the needle metal part
+  auto devicevol_hu = ReadITKImageFromDisk<RayCaster::Vol>(devicevol_path);
+
+  vout << "  HU --> Att. ..." << std::endl;
+
+  auto devicevol_att = HUToLinAtt(devicevol_hu.GetPointer());
+
+  unsigned char device_label = 1;
+
+  auto device_vol = ApplyMaskToITKImage(devicevol_att.GetPointer(), device_seg.GetPointer(), device_label, float(0), true);
 
   FrameTransform refUReef_xform;
   {
@@ -136,7 +154,7 @@ int main(int argc, char* argv[])
 
   FrameTransform ref_device_xform = ReadITKAffineTransformFromFile(refdevice_xform_file_path);
 
-  FrameTransform handeye_regi_X = ReadITKAffineTransformFromFile(handeye_regi_file_path);  
+  FrameTransform handeye_regi_X = ReadITKAffineTransformFromFile(handeye_regi_file_path);
 
   std::cout << "reading device BB landmarks from FCSV file..." << std::endl;
   auto device_3d_fcsv = ReadFCSVFileNamePtMap(device_3d_fcsv_path);
@@ -190,7 +208,7 @@ int main(int argc, char* argv[])
     const std::string exp_ID                = exp_ID_list[idx];
     const std::string img_path              = dicom_path + "/" + exp_ID;
 
-    std::cout << "Running..." << exp_ID << std::endl;    
+    std::cout << "Running..." << exp_ID << std::endl;
 
     ProjPreProc proj_pre_proc;
     proj_pre_proc.input_projs.resize(1);
@@ -234,6 +252,36 @@ int main(int argc, char* argv[])
     }
 
     WriteFCSVFileFromNamePtMap(output_path + "/reproj_bb" + exp_ID + ".fcsv", reproj_bbs_fcsv);
+
+    {
+      LandMap3 reproj_screws_fcsv;
+
+      for( const auto& n : device_3d_fcsv )
+      {
+        auto reproj_screws = default_cam.phys_pt_to_ind_pt(Pt3(init_cam_to_device.inverse() *  n.second));
+        reproj_screws[0] = 0.194 * (reproj_screws[0] - 1536);
+        reproj_screws[1] = 0.194 * (reproj_screws[1] - 1536);
+        reproj_screws[2] = 0;
+        std::pair<std::string, Pt3> ld2_3D(n.first, reproj_screws);
+        reproj_screws_fcsv.insert(ld2_3D);
+      }
+
+      WriteFCSVFileFromNamePtMap(output_path + "/reproj_screws" + exp_ID + ".fcsv", reproj_screws_fcsv);
+    }
+
+    if( reproj_drr )
+    {
+      auto ray_caster = LineIntRayCasterFromProgOpts(po);
+      ray_caster->set_camera_model(default_cam);
+      ray_caster->use_proj_store_replace_method();
+      ray_caster->set_volume(device_vol);
+      ray_caster->set_num_projs(1);
+      ray_caster->allocate_resources();
+      ray_caster->xform_cam_to_itk_phys(0) = init_cam_to_device;
+      ray_caster->compute(0);
+
+      WriteITKImageRemap8bpp(ray_caster->proj(0).GetPointer(), output_path + "/device_reproj" + exp_ID + ".png");
+    }
   }
 
   return 0;
