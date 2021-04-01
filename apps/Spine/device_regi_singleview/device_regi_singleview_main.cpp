@@ -307,11 +307,11 @@ int main(int argc, char* argv[])
 
           auto pen_fn = std::make_shared<Regi2D3DPenaltyFnSE3Mag>();
 
-          pen_fn->rot_pdfs_per_obj   = { std::make_shared<FoldNormDist>(2.5 * kDEG2RAD, 2.5 * kDEG2RAD) };
-          pen_fn->trans_pdfs_per_obj = { std::make_shared<FoldNormDist>(5, 5) };
+          pen_fn->rot_pdfs_per_obj   = { std::make_shared<FoldNormDist>(30 * kDEG2RAD, 30 * kDEG2RAD) };
+          pen_fn->trans_pdfs_per_obj = { std::make_shared<FoldNormDist>(50, 50) };
 
-          cmaes_regi->set_pop_size(20);
-          cmaes_regi->set_sigma({ 2.5 * kDEG2RAD, 2.5 * kDEG2RAD, 2.5 * kDEG2RAD, 2.5, 2.5, 25 });
+          cmaes_regi->set_pop_size(50);
+          cmaes_regi->set_sigma({ 10 * kDEG2RAD, 10 * kDEG2RAD, 10 * kDEG2RAD, 15, 15, 15 });
 
           cmaes_regi->set_penalty_fn(pen_fn);
           cmaes_regi->set_img_sim_penalty_coefs(0.9, 1.0);

@@ -114,20 +114,21 @@ int main(int argc, char* argv[])
   std::ostream& vout = po.vout();
 
   const std::string device_2d_fcsv_root_path  = po.pos_args()[0];  // 2D Landmark root path
-  const std::string device_3d_fcsv_path       = po.pos_args()[1];  // 3D device landmarks path
-  const std::string device_3d_bb_fcsv_path    = po.pos_args()[2];  // 3D device BB
-  const std::string UR_kins_path              = po.pos_args()[3];  // UR kinematics path
-  const std::string dicom_path                = po.pos_args()[4];  // Dicom image path
-  const std::string output_path               = po.pos_args()[5];  // Output path
-  const std::string exp_list_path             = po.pos_args()[6];  // Experiment list file path
+  const std::string meta_data_path            = po.pos_args()[1];  // 3D device landmarks path
+  const std::string UR_kins_path              = po.pos_args()[2];  // UR kinematics path
+  const std::string dicom_path                = po.pos_args()[3];  // Dicom image path
+  const std::string output_path               = po.pos_args()[4];  // Output path
+  const std::string exp_list_path             = po.pos_args()[5];  // Experiment list file path
+
+  const std::string handeye_X_path = meta_data_path + "/devicehandeye_X.h5";
+  const std::string device_3d_fcsv_path = meta_data_path + "/Device3Dlandmark.fcsv";
+  const std::string device_3d_bb_fcsv_path = meta_data_path + "/Device3Dbb.fcsv";
+  const std::string devicevol_path = meta_data_path + "/Device_crop_CT.nii.gz";
+  const std::string deviceseg_path = meta_data_path + "/Device_crop_seg.nii.gz";
 
   std::cout << "reading device BB landmarks from FCSV file..." << std::endl;
   auto device_3d_fcsv = ReadFCSVFileNamePtMap(device_3d_fcsv_path);
   ConvertRASToLPS(&device_3d_fcsv);
-
-  const std::string handeye_X_path = "/home/cong/Research/Spine/Handeye_Calibration/devicehandeye_X.h5";
-  const std::string devicevol_path = "/home/cong/Research/Spine/CadaverNeedleInjection/meta_data/Device_crop_CT.nii.gz";
-  const std::string deviceseg_path = "/home/cong/Research/Spine/CadaverNeedleInjection/meta_data/Device_crop_seg.nii.gz";
 
   FrameTransform device_rotcen_ref = FrameTransform::Identity();
   {
