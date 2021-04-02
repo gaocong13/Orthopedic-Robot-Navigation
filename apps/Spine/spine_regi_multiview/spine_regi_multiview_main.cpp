@@ -112,13 +112,12 @@ int main(int argc, char* argv[])
   const bool verbose = po.get("verbose");
   std::ostream& vout = po.vout();
 
-  const std::string spineld_2d_fcsv_path       = po.pos_args()[0];  // 2D spine landmarks path
-  const std::string meta_data_path             = po.pos_args()[1];  // Meta Data path
-  const std::string dicom_path                 = po.pos_args()[2];  // Dicom image path
-  const std::string init_xform_folder          = po.pos_args()[3];
-  const std::string output_path                = po.pos_args()[4];
-  const std::string device_exp_list_path       = po.pos_args()[5];  // Experiment image list file path
-  const std::string spine_exp_list_path        = po.pos_args()[6];  // Experiment image list file path
+  const std::string meta_data_path             = po.pos_args()[0];  // Meta Data path
+  const std::string dicom_path                 = po.pos_args()[1];  // Dicom image path
+  const std::string init_xform_folder          = po.pos_args()[2];
+  const std::string output_path                = po.pos_args()[3];
+  const std::string device_exp_list_path       = po.pos_args()[4];  // Experiment image list file path
+  const std::string spine_exp_list_path        = po.pos_args()[5];  // Experiment image list file path
 
   const std::string spine_3d_fcsv_path = meta_data_path + "/Spine_3D_landmarks.fcsv";
   const std::string spinevol_path      = meta_data_path + "/Spine21-2512_CT_crop.nrrd";

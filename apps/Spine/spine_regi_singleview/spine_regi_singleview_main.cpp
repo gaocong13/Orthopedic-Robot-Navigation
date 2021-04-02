@@ -171,7 +171,7 @@ int main(int argc, char* argv[])
 
     std::cout << "Running..." << exp_ID << std::endl;
     auto spinebb_2d_fcsv = ReadFCSVFileNamePtMap(spinebb_2d_fcsv_path);
-    ConvertRASToLPS(&spinebb_2d_fcsv);
+    //ConvertRASToLPS(&spinebb_2d_fcsv);
 
     xregASSERT(spinebb_2d_fcsv.size() > 3);
 
