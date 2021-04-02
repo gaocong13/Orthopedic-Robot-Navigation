@@ -197,6 +197,8 @@ int main(int argc, char* argv[])
     }
   }
 
+  if(lineNumber!=exp_ID_list.size()) throw std::runtime_error("Exp ID list size mismatch!!!");
+
   const size_type num_views = lineNumber;
 
   std::shared_ptr<MultiLevelMultiObjRegi::CamAlignRefFrameWithCurPose> device_singleview_regi_ref_frame;
@@ -223,8 +225,6 @@ int main(int argc, char* argv[])
     device_singleview_regi_ref_frame->center_of_rot_wrt_vol[1] = device_rotcenter[1];
     device_singleview_regi_ref_frame->center_of_rot_wrt_vol[2] = device_rotcenter[2];
   }
-
-  if(lineNumber!=exp_ID_list.size()) throw std::runtime_error("Exp ID list size mismatch!!!");
 
   const auto default_cam = NaiveCamModelFromCIOSFusion(
                                   MakeNaiveCIOSFusionMetaDR(), true);

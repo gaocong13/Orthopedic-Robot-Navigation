@@ -353,9 +353,12 @@ int main(int argc, char* argv[])
       if (kSAVE_REGI_DEBUG)
       {
         vout << "writing debug info to disk..." << std::endl;
-        const std::string dst_debug_path = output_path + "/debug_device" + exp_ID + ".h5";  
+        const std::string dst_debug_path = output_path + "/debug_device" + exp_ID + ".h5";
         WriteMultiLevel2D3DRegiDebugToDisk(*regi.debug_info, dst_debug_path);
       }
+
+      FrameTransform device_regi_xform = regi.cur_cam_to_vols[0];
+      WriteITKAffineTransform(output_path + "/device_regi_xform" + exp_ID + ".h5", device_regi_xform);
 
       {
         auto ray_caster = LineIntRayCasterFromProgOpts(po);
@@ -387,7 +390,7 @@ int main(int argc, char* argv[])
 
       for( const auto& n : device_3d_bb_fcsv )
       {
-        auto reproj_bb = default_cam.phys_pt_to_ind_pt(Pt3(regi.cur_cam_to_vols[0].inverse() *  n.second));
+        auto reproj_bb = default_cam.phys_pt_to_ind_pt(Pt3(device_regi_xform.inverse() *  n.second));
         reproj_bb[0] = 0.194 * (reproj_bb[0] - 1536);
         reproj_bb[1] = 0.194 * (reproj_bb[1] - 1536);
         reproj_bb[2] = 0;
