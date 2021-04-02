@@ -82,23 +82,29 @@ int main(int argc, char* argv[])
   std::ostream& vout = po.vout();
 
   const std::string landmark2d_root_path    = po.pos_args()[0];  // 2D Landmark root path
-  const std::string spine_3d_fcsv_path      = po.pos_args()[1];  // 3D spine landmarks path
+  const std::string meta_data_path          = po.pos_args()[1];  // 3D spine landmarks path
   const std::string exp_list_path           = po.pos_args()[2];  // Experiment list file path
   const std::string dicom_path              = po.pos_args()[3];  // Dicom image path
   const std::string output_path             = po.pos_args()[4];  // Output path
 
-  std::cout << "reading spine BB landmarks from FCSV file..." << std::endl;
+  const std::string spinevol_path = meta_data_path + "/Spine21-2512_CT_crop.nrrd";
+  const std::string spineseg_path = meta_data_path + "/Sheetness_seg_crop_mapped.nrrd";
+  const std::string spine_3d_fcsv_path = meta_data_path + "/Spine_3D_landmarks.fcsv";
+
+  std::cout << "reading spine anatomical landmarks from FCSV file..." << std::endl;
   auto spine_3d_fcsv = ReadFCSVFileNamePtMap(spine_3d_fcsv_path);
   ConvertRASToLPS(&spine_3d_fcsv);
-
-  const std::string spinevol_path = "/home/cong/Research/Femoroplasty/Phantom_Injection/meta_data/spine_CT_crop.nii.gz";
-  const std::string spineseg_path = "/home/cong/Research/Femoroplasty/Phantom_Injection/meta_data/spine_seg_crop.nii.gz";
 
   const bool use_seg = true;
   auto spine_seg = ReadITKImageFromDisk<itk::Image<unsigned char,3>>(spineseg_path);
 
   vout << "reading spine volume..." << std::endl; // We only use the needle metal part
   auto spinevol_hu = ReadITKImageFromDisk<RayCaster::Vol>(spinevol_path);
+
+  {
+    spinevol_hu->SetOrigin(spine_seg->GetOrigin());
+    spinevol_hu->SetSpacing(spine_seg->GetSpacing());
+  }
 
   vout << "  HU --> Att. ..." << std::endl;
   auto spinevol_att = HUToLinAtt(spinevol_hu.GetPointer());
@@ -194,12 +200,6 @@ int main(int argc, char* argv[])
     proj_pre_proc();
     auto& projs_to_regi = proj_pre_proc.output_projs;
 
-    // Create Debug Proj H5 File
-    const std::string proj_data_h5_path = output_path + "/spine_singleview_proj_data" + exp_ID + ".h5";
-    vout << "creating H5 proj data file for img" + exp_ID + "..." << std::endl;
-    H5::H5File h5(proj_data_h5_path, H5F_ACC_TRUNC);
-    WriteProjDataH5(proj_pre_proc.output_projs[0], &h5);
-
     //FrameTransform init_cam_to_spine = EstCamToWorldBruteForcePOSITCMAESRefine(default_cam, spineproj_lands, spinebb_3d_fcsv);
     FrameTransform init_cam_to_spine = PnPPOSITAndReprojCMAES(projs_to_regi[0].cam, spine_3d_fcsv, projs_to_regi[0].landmarks);
 
@@ -284,35 +284,49 @@ int main(int argc, char* argv[])
 
         lvl_regi_coarse.regi = cmaes_regi;
       }
-      vout << std::endl << "Single view spine registration ..." << std::endl;
-      regi.run();
-      regi.levels[0].regis[0].fns_to_call_right_before_regi_run.clear();
+    }
 
-      if (kSAVE_REGI_DEBUG )
+    if (kSAVE_REGI_DEBUG )
+    {
+      // Create Debug Proj H5 File
+      const std::string proj_data_h5_path = output_path + "/spine_singleview_proj_data" + exp_ID + ".h5";
+      vout << "creating H5 proj data file for img" + exp_ID + "..." << std::endl;
+      H5::H5File h5(proj_data_h5_path, H5F_ACC_TRUNC);
+      WriteProjDataH5(regi.fixed_proj_data, &h5);
+
+      vout << "  setting regi debug info..." << std::endl;
+
+      DebugRegiResultsMultiLevel::VolPathInfo debug_vol_path;
+      debug_vol_path.vol_path = spinevol_path;
+
+      if (use_seg)
       {
-        vout << "  setting regi debug info..." << std::endl;
-
-        DebugRegiResultsMultiLevel::VolPathInfo debug_vol_path;
-        debug_vol_path.vol_path = spinevol_path;
-
-        if (use_seg)
-        {
-          debug_vol_path.label_vol_path = spineseg_path;
-          debug_vol_path.labels_used    = { spine_label };
-        }
-
-        regi.debug_info->vols = { debug_vol_path };
-
-        DebugRegiResultsMultiLevel::ProjDataPathInfo debug_proj_path;
-        debug_proj_path.path = proj_data_h5_path;
-        // debug_proj_path.projs_used = { view_idx };
-
-        regi.debug_info->fixed_projs = debug_proj_path;
-
-        regi.debug_info->proj_pre_proc_info = proj_pre_proc.params;
-
-        regi.debug_info->regi_names = { { "Singleview Spine" + exp_ID } };
+        debug_vol_path.label_vol_path = spineseg_path;
+        debug_vol_path.labels_used    = { spine_label };
       }
+
+      regi.debug_info->vols = { debug_vol_path };
+
+      DebugRegiResultsMultiLevel::ProjDataPathInfo debug_proj_path;
+      debug_proj_path.path = proj_data_h5_path;
+      // debug_proj_path.projs_used = { view_idx };
+
+      regi.debug_info->fixed_projs = debug_proj_path;
+
+      regi.debug_info->proj_pre_proc_info = proj_pre_proc.params;
+
+      regi.debug_info->regi_names = { { "Singleview Spine" + exp_ID } };
+    }
+
+    vout << std::endl << "Single view spine registration ..." << std::endl;
+    regi.run();
+    regi.levels[0].regis[0].fns_to_call_right_before_regi_run.clear();
+
+    if (kSAVE_REGI_DEBUG)
+    {
+      vout << "writing debug info to disk..." << std::endl;
+      const std::string dst_debug_path = output_path + "/debug_spine" + exp_ID + ".h5";
+      WriteMultiLevel2D3DRegiDebugToDisk(*regi.debug_info, dst_debug_path);
     }
 
     WriteITKAffineTransform(output_path + "/spine_regi_xform" + exp_ID + ".h5", regi.cur_cam_to_vols[0]);
