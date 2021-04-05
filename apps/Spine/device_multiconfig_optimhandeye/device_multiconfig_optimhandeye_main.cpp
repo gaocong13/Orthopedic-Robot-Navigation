@@ -403,7 +403,7 @@ int main(int argc, char* argv[])
 
   auto& lvl = regi.levels[0];
 
-  lvl.ds_factor = 0.125;
+  lvl.ds_factor = 0.0625;
 
   lvl.ray_caster = LineIntRayCasterFromProgOpts(po);
 
@@ -475,7 +475,7 @@ int main(int argc, char* argv[])
 
       cmaes_regi->set_pop_size(20);
       cmaes_regi->set_sigma({ 2.5 * kDEG2RAD, 2.5 * kDEG2RAD, 2.5 * kDEG2RAD, 2.5, 2.5, 25,
-                              2.5 * kDEG2RAD, 2.5 * kDEG2RAD, 2.5 * kDEG2RAD, 5, 5, 5 });
+                              1 * kDEG2RAD, 1 * kDEG2RAD, 1 * kDEG2RAD, 3, 3, 3 });
 
       cmaes_regi->set_penalty_fn(pen_fn);
       cmaes_regi->set_img_sim_penalty_coefs(0.9, 1.0);

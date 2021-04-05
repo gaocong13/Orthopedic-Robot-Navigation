@@ -81,11 +81,12 @@ int main(int argc, char* argv[])
   std::ostream& vout = po.vout();
 
   const std::string device_2d_fcsv_path     = po.pos_args()[0];  // 2D Landmark root path
-  const std::string device_3d_fcsv_path     = po.pos_args()[1];  // 3D device landmarks path
+  const std::string meta_data_path          = po.pos_args()[1];  // Meta Data path
   const std::string exp_list_path           = po.pos_args()[2];  // Experiment list file path
   const std::string dicom_path              = po.pos_args()[3];  // Dicom image path
   const std::string output_path             = po.pos_args()[4];  // Output path
 
+  const std::string device_3d_fcsv_path = meta_data_path + "/Device3Dbb.fcsv";
   std::cout << "reading device BB landmarks from FCSV file..." << std::endl;
   auto device_3d_fcsv = ReadFCSVFileNamePtMap(device_3d_fcsv_path);
   ConvertRASToLPS(&device_3d_fcsv);

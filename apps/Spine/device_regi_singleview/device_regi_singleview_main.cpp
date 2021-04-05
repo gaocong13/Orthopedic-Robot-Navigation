@@ -1,4 +1,3 @@
-
 // STD
 #include <iostream>
 #include <vector>
@@ -74,8 +73,8 @@ int main(int argc, char* argv[])
   xregPROG_OPTS_SET_COMPILE_DATE(po);
 
   po.set_help("Single-view Device Registration");
-  po.set_arg_usage("<Device 2D landmark annotation ROOT path> <Device 3D landmark annotation FILE path> <Device 3D BB FILE path> <Image ID list txt file path> <Image DICOM ROOT path> <Output folder path>");
-  po.set_min_num_pos_args(6);
+  po.set_arg_usage("<Device 2D landmark annotation ROOT path> <Meta Data path> <Image ID list txt file path> <Image DICOM ROOT path> <Output folder path>");
+  po.set_min_num_pos_args(5);
 
   po.add_backend_flags();
 
@@ -101,18 +100,19 @@ int main(int argc, char* argv[])
   std::ostream& vout = po.vout();
 
   const std::string landmark2d_root_path    = po.pos_args()[0];  // 2D Landmark root path
-  const std::string device_3d_fcsv_path     = po.pos_args()[1];  // 3D device landmarks path
-  const std::string device_3d_bb_fcsv_path  = po.pos_args()[2];  // 3D device BB annotation path
-  const std::string exp_list_path           = po.pos_args()[3];  // Experiment list file path
-  const std::string dicom_path              = po.pos_args()[4];  // Dicom image path
-  const std::string output_path             = po.pos_args()[5];  // Output path
+  const std::string meta_data_path          = po.pos_args()[1];  // 3D device landmarks path
+  const std::string exp_list_path           = po.pos_args()[2];  // Experiment list file path
+  const std::string dicom_path              = po.pos_args()[3];  // Dicom image path
+  const std::string output_path             = po.pos_args()[4];  // Output path
+
+  const std::string device_3d_fcsv_path    = meta_data_path + "/Device3Dlandmark.fcsv";
+  const std::string device_3d_bb_fcsv_path = meta_data_path + "/Device3Dbb.fcsv";
+  const std::string devicevol_path         = meta_data_path + "/Device_crop_CT.nii.gz";
+  const std::string deviceseg_path         = meta_data_path + "/Device_crop_seg.nii.gz";
 
   std::cout << "reading device BB landmarks from FCSV file..." << std::endl;
   auto device_3d_fcsv = ReadFCSVFileNamePtMap(device_3d_fcsv_path);
   ConvertRASToLPS(&device_3d_fcsv);
-
-  const std::string devicevol_path = "/home/cong/Research/Spine/CadaverNeedleInjection/meta_data/Device_crop_CT.nii.gz";
-  const std::string deviceseg_path = "/home/cong/Research/Spine/CadaverNeedleInjection/meta_data/Device_crop_seg.nii.gz";
 
   const bool use_seg = true;
   auto device_seg = ReadITKImageFromDisk<itk::Image<unsigned char,3>>(deviceseg_path);
@@ -357,9 +357,6 @@ int main(int argc, char* argv[])
         WriteMultiLevel2D3DRegiDebugToDisk(*regi.debug_info, dst_debug_path);
       }
 
-      FrameTransform device_regi_xform = regi.cur_cam_to_vols[0];
-      WriteITKAffineTransform(output_path + "/device_regi_xform" + exp_ID + ".h5", device_regi_xform);
-
       {
         auto ray_caster = LineIntRayCasterFromProgOpts(po);
         ray_caster->set_camera_model(default_cam);
@@ -390,7 +387,7 @@ int main(int argc, char* argv[])
 
       for( const auto& n : device_3d_bb_fcsv )
       {
-        auto reproj_bb = default_cam.phys_pt_to_ind_pt(Pt3(device_regi_xform.inverse() *  n.second));
+        auto reproj_bb = default_cam.phys_pt_to_ind_pt(Pt3(regi.cur_cam_to_vols[0].inverse() *  n.second));
         reproj_bb[0] = 0.194 * (reproj_bb[0] - 1536);
         reproj_bb[1] = 0.194 * (reproj_bb[1] - 1536);
         reproj_bb[2] = 0;
