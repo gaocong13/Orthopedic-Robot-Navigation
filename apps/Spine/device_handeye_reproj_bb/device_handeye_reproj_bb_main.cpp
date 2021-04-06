@@ -123,6 +123,7 @@ int main(int argc, char* argv[])
   const std::string output_path               = po.pos_args()[7];  // Output path
 
   const bool reproj_drr = false;
+  const bool cal_3D_pts = true;
 
   const std::string device_3d_fcsv_path       = meta_data_path + "/Device3Dlandmark.fcsv";
   const std::string device_3d_bb_fcsv_path    = meta_data_path + "/Device3Dbb.fcsv";
@@ -203,6 +204,25 @@ int main(int argc, char* argv[])
 
   bool is_first_view = true;
 
+  Pt3 URtool_origin = {0, 0, 0};
+
+  auto devicetip_fcsv = device_3d_fcsv.find("DrillTip");
+  Pt3 device_tip_pt;
+
+  if (devicetip_fcsv != device_3d_fcsv.end()){
+    device_tip_pt = devicetip_fcsv->second;
+  }
+  else{
+    std::cout << "ERROR: NOT FOUND DEVICE TIP PT" << std::endl;
+  }
+
+  if (cal_3D_pts)
+  {
+    std::ofstream URbase_ref_3Dpt;
+    URbase_ref_3Dpt.open(output_path + "/URbase_ref_3Dpt.txt", std::ios::trunc);
+    URbase_ref_3Dpt.close();
+  }
+
   for(int idx=0; idx<lineNumber; ++idx)
   {
     const std::string exp_ID                = exp_ID_list[idx];
@@ -224,16 +244,19 @@ int main(int argc, char* argv[])
     auto& projs_to_regi = proj_pre_proc.output_projs;
 
     FrameTransform init_cam_to_device;
+    FrameTransform UReef_xform;
     {
-      const std::string src_ureef_path          = UR_kins_path + "/" + exp_ID_list[idx] + "/ur_eef.h5";
+      const std::string src_ureef_path          = UR_kins_path + "/" + exp_ID + "/ur_eef.h5";
       H5::H5File h5_ureef(src_ureef_path, H5F_ACC_RDWR);
       H5::Group ureef_transform_group           = h5_ureef.openGroup("TransformGroup");
       H5::Group ureef_group0                    = ureef_transform_group.openGroup("0");
       std::vector<float> UReef_tracker          = ReadVectorH5Float("TranformParameters", ureef_group0);
-      FrameTransform UReef_xform                = ConvertSlicerToITK(UReef_tracker);
+      UReef_xform                               = ConvertSlicerToITK(UReef_tracker);
 
       init_cam_to_device = device_rotcen_ref.inverse() * handeye_regi_X.inverse() * UReef_xform.inverse() * refUReef_xform * handeye_regi_X * device_rotcen_ref * ref_device_xform;
     }
+
+    WriteITKAffineTransform(output_path + "/device_reproj_xform" + exp_ID + ".h5", init_cam_to_device);
 
     LandMap3 reproj_bbs_fcsv;
 
@@ -281,6 +304,26 @@ int main(int argc, char* argv[])
       ray_caster->compute(0);
 
       WriteITKImageRemap8bpp(ray_caster->proj(0).GetPointer(), output_path + "/device_reproj" + exp_ID + ".png");
+    }
+
+    if (cal_3D_pts)
+    {
+      Pt3 URtool_origin_wrt_URbase = UReef_xform * URtool_origin;
+      Pt3 Device_tip_wrt_URbase = UReef_xform * handeye_regi_X * device_rotcen_ref * device_tip_pt;
+
+      const std::string grd_pnp_xform_file = meta_data_path + "/../output_pnp/device_pnp_xform" + exp_ID + ".h5";
+      FrameTransform grd_pnp_xform = ReadITKAffineTransformFromFile(grd_pnp_xform_file);
+
+      Pt3 Device_tip_wrt_Carm_reproj = init_cam_to_device.inverse() * device_tip_pt;
+      Pt3 Device_tip_wrt_Carm_grd = grd_pnp_xform.inverse() * device_tip_pt;
+
+      std::ofstream URbase_ref_3Dpt;
+      URbase_ref_3Dpt.open(output_path + "/URbase_ref_3Dpt.txt", std::ios::app);
+      URbase_ref_3Dpt << exp_ID << "," << "URtoolOrigin," << URtool_origin_wrt_URbase[0] << "," << URtool_origin_wrt_URbase[1] << "," << URtool_origin_wrt_URbase[2] << ","
+                      << "DeviceTipURbase," << Device_tip_wrt_URbase[0] << "," << Device_tip_wrt_URbase[1] << "," << Device_tip_wrt_URbase[2] << ","
+                      << "DeviceTipCarmRepo," << Device_tip_wrt_Carm_reproj[0] << "," << Device_tip_wrt_Carm_reproj[1] << "," << Device_tip_wrt_Carm_reproj[2] << ","
+                      << "DeviceTipCarmGRD," << Device_tip_wrt_Carm_grd[0] << "," << Device_tip_wrt_Carm_grd[1] << "," << Device_tip_wrt_Carm_grd[2] << '\n';
+      URbase_ref_3Dpt.close();
     }
   }
 
