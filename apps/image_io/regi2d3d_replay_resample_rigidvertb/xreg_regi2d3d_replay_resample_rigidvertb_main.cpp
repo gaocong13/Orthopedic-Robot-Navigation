@@ -40,6 +40,7 @@
 #include "xregRegi2D3DPenaltyFnLandReproj.h"
 #include "xregRegi2D3DPenaltyFnCombo.h"
 #include "xregMultiObjMultiLevel2D3DRegiDebug.h"
+#include "xregHDF5.h"
 
 using namespace xreg;
 
@@ -309,10 +310,30 @@ int main(int argc, char* argv[])
   auto regi_results = ReadMultiLevel2D3DRegiDebugFromDisk(regi_results_path);
 
   vout << "reading volumes (and converting HU --> lin. att.) for playback..." << std::endl;
-
+  H5::H5File regi_results_h5(regi_results_path, H5F_ACC_RDONLY);
   VolList vols;
   VolList hu_vols;
-  std::tie(hu_vols,vols) = VolDataFromDebug(regi_results, true);
+  // std::tie(hu_vols,vols) = VolDataFromDebug(regi_results, false);
+  H5::Group vols_g = regi_results_h5.openGroup("vols");
+  auto num_entries = ReadSingleScalarH5ULong("num-entries", vols_g);
+
+  for (size_type entry_idx = 0; entry_idx < num_entries; ++entry_idx)
+  {
+    const std::string vol_ID = fmt::format("{:03d}", entry_idx);
+    H5::Group vol_g = vols_g.openGroup(vol_ID);
+    auto vol_path = ReadStringH5("vol-path", vol_g);
+    auto cur_vol_hu_path = vol_path + "_hu.nii.gz";
+    auto cur_vol_att_path = vol_path + "_att.nii.gz";
+
+    auto cur_vol_hu = ReadITKImageFromDisk<RayCaster::Vol>(cur_vol_hu_path);
+    auto cur_vol_att = ReadITKImageFromDisk<RayCaster::Vol>(cur_vol_att_path);
+
+    hu_vols.push_back(cur_vol_hu);
+    vols.push_back(cur_vol_att);
+  }
+  regi_results_h5.close();
+
+  // vols = hu_vols; // Assuming hu_vols are already attenuated in the main program
 
   if (!compute_boundary_edges)
   {

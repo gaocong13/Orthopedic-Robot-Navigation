@@ -1,0 +1,8 @@
+
+set(EXE_NAME "${XREG_EXE_PREFIX}spine-spine-sim-result")
+
+add_executable(${EXE_NAME} spine_sim_result_main.cpp)
+
+target_link_libraries(${EXE_NAME} PUBLIC ${XREG_EXE_LIBS_TO_LINK})
+
+install(TARGETS ${EXE_NAME})

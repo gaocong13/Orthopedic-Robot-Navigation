@@ -63,7 +63,7 @@ struct WriteDebugVolInfo : boost::static_visitor<void>
     SetStringAttr("vol-entry-type", "path-info", g);
 
     WriteStringH5("vol-path", vol_path_info.vol_path, g);
-  
+
     if (!vol_path_info.label_vol_path.empty())
     {
       WriteStringH5("label-vol-path", vol_path_info.label_vol_path, g);
@@ -95,7 +95,7 @@ struct WriteDebugProjDataInfo : boost::static_visitor<void>
   void operator()(const DebugRegiResultsMultiLevel::ProjDataPathInfo& pd_path_info)
   {
     SetStringAttr("projs-entry-type", "path-info", g);
-    
+
     WriteStringH5("path", pd_path_info.path, g);
 
     if (!pd_path_info.projs_used.empty())
@@ -118,14 +118,14 @@ void xreg::WriteMultiLevel2D3DRegiDebugH5(const DebugRegiResultsMultiLevel& resu
     const size_type num_vol_entries = results.vols.size();
 
     WriteSingleScalarH5("num-entries", num_vol_entries, &vols_g);
-  
+
     for (size_type vol_idx = 0; vol_idx < num_vol_entries; ++vol_idx)
     {
       H5::Group cur_vol_g = vols_g.createGroup(fmt::format("{:03d}", vol_idx));
-    
+
       WriteDebugVolInfo write_debug_vol_info;
       write_debug_vol_info.g = &cur_vol_g;
-      
+
       boost::apply_visitor(write_debug_vol_info, results.vols[vol_idx]);
     }
   }
@@ -140,12 +140,12 @@ void xreg::WriteMultiLevel2D3DRegiDebugH5(const DebugRegiResultsMultiLevel& resu
   }
 
   WriteSingleScalarH5("multi-level-time", results.multi_level_run_time_secs, h5);
-  
+
   if (results.tot_time_secs)
   {
     WriteSingleScalarH5("total-time", *results.tot_time_secs, h5);
   }
-  
+
   if (results.pre_proc_time_secs)
   {
     WriteSingleScalarH5("pre-proc-time", *results.pre_proc_time_secs, h5);
@@ -162,14 +162,14 @@ void xreg::WriteMultiLevel2D3DRegiDebugH5(const DebugRegiResultsMultiLevel& resu
   for (size_type level_idx = 0; level_idx < num_levels; ++level_idx)
   {
     H5::Group lvl_g = levels_g.createGroup(fmt::format("{:03d}", level_idx));
-  
+
     WriteSingleScalarH5("ds-factor", results.multi_res_levels[level_idx], &lvl_g);
 
     const size_type num_regis_this_level = results.regi_results[level_idx].size();
     xregASSERT(results.regi_names[level_idx].size() == num_regis_this_level);
-    
-    WriteSingleScalarH5("num-regi", num_regis_this_level, &lvl_g); 
-    
+
+    WriteSingleScalarH5("num-regi", num_regis_this_level, &lvl_g);
+
     for (size_type regi_idx = 0; regi_idx < num_regis_this_level; ++regi_idx)
     {
       H5::Group regi_g = lvl_g.createGroup(fmt::format("regi-{:03d}", regi_idx));
@@ -183,22 +183,22 @@ void xreg::WriteMultiLevel2D3DRegiDebugH5(const DebugRegiResultsMultiLevel& resu
   if (results.proj_pre_proc_info)
   {
     H5::Group pre_proc_g = h5->createGroup("proj-pre-proc-info");
-    
+
     const auto& ppd = *results.proj_pre_proc_info;
 
     WriteSingleScalarH5("crop-width", ppd.crop_width, &pre_proc_g);
-    
+
     WriteSingleScalarH5("auto-mask", ppd.auto_mask, &pre_proc_g);
-    
+
     WriteSingleScalarH5("invert-mask", ppd.invert_mask, &pre_proc_g);
-    
+
     if (ppd.auto_mask)
     {
       WriteSingleScalarH5("auto-mask-thresh", ppd.auto_mask_thresh, &pre_proc_g);
       WriteSingleScalarH5("auto-mask-level", ppd.auto_mask_level, &pre_proc_g);
       WriteSingleScalarH5("allow-iterative-thresh", ppd.allow_iterative_thresh, &pre_proc_g);
     }
-    
+
     WriteSingleScalarH5("no-log-remap", ppd.no_log_remap, &pre_proc_g);
   }
 }
@@ -216,27 +216,27 @@ void xreg::WriteMultiLevel2D3DRegiDebugToDisk(const DebugRegiResultsMultiLevel& 
 xreg::DebugRegiResultsMultiLevel xreg::ReadMultiLevel2D3DRegiDebugH5(const H5::CommonFG& h5)
 {
   DebugRegiResultsMultiLevel results;
- 
+
   if (ObjectInGroupH5("vols", h5))
   {
     const H5::Group vols_g = h5.openGroup("vols");
-  
+
     const size_type num_vol_entries = ReadSingleScalarH5ULong("num-entries", vols_g);
-    
+
     results.vols.reserve(num_vol_entries);
-    
+
     for (size_type vol_idx = 0; vol_idx < num_vol_entries; ++vol_idx)
     {
       const H5::Group cur_vol_g = vols_g.openGroup(fmt::format("{:03d}", vol_idx));
-      
+
       const std::string entry_type_str = GetStringAttr("vol-entry-type", cur_vol_g);
 
       if (entry_type_str == "path-info")
       {
         DebugRegiResultsMultiLevel::VolPathInfo vol_path_info;
-        
+
         vol_path_info.vol_path = ReadStringH5("vol-path", cur_vol_g);
-        
+
         if (ObjectInGroupH5("label-vol-path", cur_vol_g))
         {
           vol_path_info.label_vol_path = ReadStringH5("label-vol-path", cur_vol_g);
@@ -258,12 +258,12 @@ xreg::DebugRegiResultsMultiLevel xreg::ReadMultiLevel2D3DRegiDebugH5(const H5::C
       }
     }
   }
-  
+
   {
     const H5::Group pd_g = h5.openGroup("fixed-projs");
 
     const std::string entry_type_str = GetStringAttr("projs-entry-type", pd_g);
-    
+
     if (entry_type_str == "path-info")
     {
       DebugRegiResultsMultiLevel::ProjDataPathInfo pd_path_info;
@@ -288,12 +288,12 @@ xreg::DebugRegiResultsMultiLevel xreg::ReadMultiLevel2D3DRegiDebugH5(const H5::C
       xregThrow("Unsupported proj data entry type: %s", entry_type_str.c_str());
     }
   }
- 
+
   if (ObjectInGroupH5("total-time", h5))
   {
     results.tot_time_secs = ReadSingleScalarH5Double("total-time", h5);
   }
-  
+
   const size_type num_levels = ReadSingleScalarH5ULong("num-levels", h5);
 
   results.multi_res_levels.assign(num_levels, 0);
@@ -305,9 +305,9 @@ xreg::DebugRegiResultsMultiLevel xreg::ReadMultiLevel2D3DRegiDebugH5(const H5::C
   for (size_type level_idx = 0; level_idx < num_levels; ++level_idx)
   {
     H5::Group lvl_g = levels_g.openGroup(fmt::format("{:03d}", level_idx));
-  
+
     results.multi_res_levels[level_idx] = ReadSingleScalarH5Double("ds-factor", lvl_g);
-  
+
     auto& cur_level_results = results.regi_results[level_idx];
     auto& cur_level_names   = results.regi_names[level_idx];
 
@@ -319,21 +319,21 @@ xreg::DebugRegiResultsMultiLevel xreg::ReadMultiLevel2D3DRegiDebugH5(const H5::C
     for (size_type regi_idx = 0; regi_idx < num_regis; ++regi_idx)
     {
       H5::Group regi_g = lvl_g.openGroup(fmt::format("regi-{:03d}", regi_idx));
-      
+
       cur_level_names[regi_idx] = ReadStringH5("name", regi_g);
 
       auto regi_results = std::make_shared<SingleRegiDebugResults>();
-      
+
       *regi_results = ReadSingleRegiDebugResultsH5(regi_g);
 
       cur_level_results[regi_idx] = regi_results;
     }
   }
-  
+
   if (ObjectInGroupH5("proj-pre-proc-info", h5))
   {
     H5::Group pre_proc_g = h5.openGroup("proj-pre-proc-info");
-   
+
     ProjPreProcParams ppd;
 
     ppd.crop_width = ReadSingleScalarH5ULong("crop-width", pre_proc_g);
@@ -346,7 +346,7 @@ xreg::DebugRegiResultsMultiLevel xreg::ReadMultiLevel2D3DRegiDebugH5(const H5::C
     {
       ppd.auto_mask_thresh = ReadSingleScalarH5Double("auto-mask-thresh", pre_proc_g);
       ppd.auto_mask_level  = ReadSingleScalarH5Double("auto-mask-level", pre_proc_g);
-      
+
       ppd.allow_iterative_thresh = ReadSingleScalarH5Bool("allow-iterative-thresh", pre_proc_g);
     }
 
@@ -377,7 +377,7 @@ struct ReadVolDataFromDebug
   using VolListPair = std::tuple<VolList,VolList>;
 
   const H5::CommonFG* h5;
-  
+
   bool hu_to_lin_att;
 
   VolListPair operator()(const VolPtr& vol) const
@@ -405,7 +405,7 @@ struct ReadVolDataFromDebug
 
     VolPtr single_vol;
     LabelVolPtr label_vol;
-    
+
     LabelList labels_to_use;
     for (const auto& l : vol_path_info.labels_used)
     {
@@ -426,7 +426,7 @@ struct ReadVolDataFromDebug
     else if (h5)
     {
       single_vol = ReadITKImageH5Float3D(h5->openGroup(vol_path_info.vol_path));
-      
+
       if (has_seg)
       {
         label_vol = ReadITKImageH5UChar3D(h5->openGroup(vol_path_info.label_vol_path));
@@ -448,11 +448,13 @@ struct ReadVolDataFromDebug
     {
       xregASSERT(!labels_to_use.empty());
 
+      label_vol->SetSpacing(single_vol->GetSpacing());
+      label_vol->SetOrigin(single_vol->GetOrigin());
       hu_vols = MakeVolListFromVolAndLabels(single_vol.GetPointer(),
                                             label_vol.GetPointer(),
                                             labels_to_use,
                                             -1000);
-      
+
       if (hu_to_lin_att)
       {
         att_vols = MakeVolListFromVolAndLabels(single_att_vol.GetPointer(),
@@ -505,7 +507,7 @@ struct ReadProjDataFromDebug : boost::static_visitor<ProjDataF32List>
     {
       ProjDataF32List new_pd;
       new_pd.reserve(pd_path_info.projs_used.size());
-      
+
       for (auto& proj_idx : pd_path_info.projs_used)
       {
         new_pd.push_back(pd[proj_idx]);
@@ -536,15 +538,15 @@ xreg::VolDataFromDebug(const DebugRegiResultsMultiLevel& results,
   for (const auto& vol_info : results.vols)
   {
     const auto cur_vols = boost::apply_visitor(vol_data_visitor, vol_info);
-    
+
     const auto& cur_hu_vols = std::get<0>(cur_vols);
-    
+
     hu_vols.insert(hu_vols.end(), cur_hu_vols.begin(), cur_hu_vols.end());
 
     if (do_hu_to_lin_att)
     {
       const auto& cur_att_vols = std::get<1>(cur_vols);
-      
+
       att_vols.insert(att_vols.end(), cur_att_vols.begin(), cur_att_vols.end());
     }
   }
@@ -560,4 +562,3 @@ xreg::ProjDataF32List xreg::ProjDataFromDebug(const DebugRegiResultsMultiLevel& 
 
   return boost::apply_visitor(r, results.fixed_projs);
 }
-

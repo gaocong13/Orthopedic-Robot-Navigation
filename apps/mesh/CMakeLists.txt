@@ -22,5 +22,6 @@
 
 add_subdirectory(create_mesh)
 add_subdirectory(show_mesh)
+add_subdirectory(transform_mesh)
 add_subdirectory(sur_regi)
 

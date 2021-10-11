@@ -29,4 +29,5 @@ add_subdirectory(add_lands_to_proj_data)
 add_subdirectory(draw_xray_scene)
 add_subdirectory(regi2d3d_replay)
 add_subdirectory(regi2d3d_replay_multiconfig_device)
+add_subdirectory(regi2d3d_replay_resample_rigidvertb)
 

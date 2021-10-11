@@ -41,9 +41,9 @@ MakeVolListFromVolAndLabelsHelper(const itk::Image<tPixelScalar,tN>* vol,
   using Img     = itk::Image<tPixelScalar,tN>;
   using ImgPtr  = typename Img::Pointer;
   using ImgList = std::vector<ImgPtr>;
-  
+
   const size_type num_vols = labels_to_use.size();
-  
+
   ImgList vols;
   vols.reserve(num_vols);
 
@@ -74,5 +74,3 @@ xreg::MakeVolListFromVolAndLabels(const itk::Image<float,3>* vol,
 {
   return MakeVolListFromVolAndLabelsHelper(vol, labels, labels_to_use, masked_out_val);
 }
-
-

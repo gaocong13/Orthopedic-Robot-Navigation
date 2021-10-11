@@ -1,5 +1,3 @@
-# Developed by Cong Gao. Email: cgao11@jhu.edu
-#
 # MIT License
 #
 # Copyright (c) 2020 Robert Grupp
@@ -22,11 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-set(EXE_NAME "${XREG_EXE_PREFIX}pelvis-femur-regi-multiview")
+add_executable(xreg-export-ipcai-xform xreg_export_ipcai_xform_main.cpp)
 
-add_executable(${EXE_NAME} pelvis_femur_regi_multiview_main.cpp)
+target_link_libraries(xreg-export-ipcai-xform xreg-ipcai)
 
-target_link_libraries(${EXE_NAME} PUBLIC ${XREG_EXE_LIBS_TO_LINK})
-
-install(TARGETS ${EXE_NAME})
-
+install(TARGETS xreg-export-ipcai-xform)
