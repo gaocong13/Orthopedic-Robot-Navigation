@@ -7,21 +7,21 @@
 # stop after the first failed command
 set -e
 
-NEED_TO_DOWNLOAD=true
-NEED_TO_BUILD_THIRD_PARTY=true
+NEED_TO_DOWNLOAD=false
+NEED_TO_BUILD_THIRD_PARTY=false
 NEED_TO_START_XREG=true
 
 DO_GUI=true
 
-#BUILD_CONFIG="Debug"
-BUILD_CONFIG="Release"
+BUILD_CONFIG="Debug"
+# BUILD_CONFIG="Release"
 
 # directory of the xReg repo, assuming this script was invoked while in that directory
 XREG_DIR="`pwd`"
 XREG_BUILD_DIR="$XREG_DIR/build"
 
-# Set this to a directory outside of the xReg repo in which to download and build dependencies 
-DEPS_DIR="$XREG_DIR/../xreg_deps"
+# Set this to a directory outside of the xReg repo in which to download and build dependencies
+DEPS_DIR="$XREG_DIR/../../xreg_deps"
 # get rid of the repository prefix in the path:
 DEPS_DIR="$(cd "$(dirname "$DEPS_DIR")"; pwd)/$(basename "$DEPS_DIR")"
 
@@ -30,7 +30,7 @@ cd $DEPS_DIR
 
 if [ "$NEED_TO_DOWNLOAD" = true ]; then
   echo "Downloading third party libraries..."
-  
+
   # Choose the TBB package for your operating system:
   OS_STR=`uname -s`
 
@@ -119,7 +119,7 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
   unzip -q $ITK_FILE
 
   rm $ITK_FILE
-  
+
   OPENCV_URL="https://github.com/opencv/opencv/archive/3.2.0.zip"
 
   OPENCV_FILE=`basename $OPENCV_URL`
@@ -261,13 +261,13 @@ cd $NLOPT_DIR
   ninja
 
   cd ../..
-  
+
 fi
 
 # START: XREG BUILD:
 
 if [ "$NEED_TO_START_XREG" = true ]; then
-  
+
   mkdir $XREG_BUILD_DIR
   cd $XREG_BUILD_DIR
 
@@ -287,4 +287,3 @@ if [ "$NEED_TO_START_XREG" = true ]; then
   ninja
 
 fi
-

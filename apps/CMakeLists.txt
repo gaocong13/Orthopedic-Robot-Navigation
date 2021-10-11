@@ -20,14 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-add_subdirectory(image_io)
-add_subdirectory(mesh)
-add_subdirectory(point_clouds)
-add_subdirectory(hip_surgery)
-add_subdirectory(transforms)
-add_subdirectory(Regi2D3D-IPCAI2020)
-add_subdirectory(Generalization)
-add_subdirectory(Snake_Registration)
 add_subdirectory(Femoroplasty)
 add_subdirectory(Spine)
 
