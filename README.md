@@ -1,16 +1,7 @@
-# xReg: Modeling and Registration Software for Surgery
-This repository contains library routines and stand-alone programs for various modeling and registration tasks relating to surgery, with a particular focus on 2D/3D registration for intraoperative X-ray navigation.
-Although xReg was developed from a practical approach and provides an out-of-the-box capability for intraoperative fluoroscopic navigation, it is also very much compatible with research-oriented goals.
-In addition to accelerating the development of new registration components through the extendable interfaces for ray casting, image similarity computation and iterative optimization, xReg is also useful as an initial baseline for evaluating the neural network approaches *du jour*.
+# Registration and System Integration Software for Orthopedic Surgical Robotic System
+This repository contains software programs for image-based registration, system integration and navigation tasks relating to orthopedic surgical robot applications. The repository is developed based on [xReg](https://github.com/rg2/xreg), following its general structure and routines. For more information of xReg, please visit the [wiki](https://github.com/rg2/xreg/wiki) for descriptions on the use of the library and executable programs. This repository forks the complete library support of xReg. The compilation of xReg and thirdparty libraries can be done using stand-alone clone of this repository.
 
-Much of the functionality provided by xReg is also useful for other computer-assisted surgery tasks.
-A comprehensive listing of the features of the library are provided below, along with a list of the executable programs that are also included in this repository.
-Please visit the [wiki](https://github.com/rg2/xreg/wiki) for descriptions on the use of the library and executable programs.
-Basic usage of the executables is provided via a walkthrough/tutorial [here](https://github.com/rg2/xreg/wiki#walkthrough).
-Please submit an [issue](https://github.com/rg2/xreg/issues) for any problems, feature requests, or suggestions.
-
-This software was originally created while conducting research with [Russell Taylor](http://www.cs.jhu.edu/~rht), [Mehran Armand](https://bigss.lcsr.jhu.edu), and [Mathias Unberath](https://mathiasunberath.github.io/) within the [Laboratory for Computational Sensing and Robotics](https://lcsr.jhu.edu) at [Johns Hopkins University](https://www.jhu.edu).
-The current repository represents a rewrite/refactor of the original, internal, version of this software, with a focus on minimizing compile times and being reusable to novice developers and researchers.
+This software was developed with support from Dr. [Robert Grupp](http://www.robertgrupp.com/), while conducting research under the supervision of Profs. [Mehran Armand](https://bigss.lcsr.jhu.edu), [Russell Taylor](http://www.cs.jhu.edu/~rht) and [Mathias Unberath](https://mathiasunberath.github.io/) within the [Laboratory for Computational Sensing and Robotics](https://lcsr.jhu.edu) at [Johns Hopkins University](https://www.jhu.edu).
 
 ## Library Features:
 * Registration:
@@ -179,7 +170,7 @@ Although the following capabilities currently only exist in an internal version 
 
 ## Building
 A standard CMake configure/generate process is used.
-It is recommended to generate Ninja build files for fast and efficient compilation. 
+It is recommended to generate Ninja build files for fast and efficient compilation.
 An example script for building all dependencies (except OpenCL) and the xReg repository is also provided [here](example_build_script).
 The [docker](docker) directory demonstrates how Docker may be used to build the software.
 
