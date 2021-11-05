@@ -20,9 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-add_subdirectory(Femoroplasty)
-add_subdirectory(Carm_PolarisMarker_Calibration)
-add_subdirectory(Carm_Xray_Simulation)
-add_subdirectory(Robotic_Injection_Device)
-add_subdirectory(Robotic_Continuum_Manipulator)
+add_executable(xreg-gen-create-h5-data xreg_gen_create_h5_data_main.cpp)
 
+target_link_libraries(xreg-gen-create-h5-data xreg-ipcai)
+
+install(TARGETS xreg-gen-create-h5-data)

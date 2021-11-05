@@ -1,0 +1,2 @@
+add_subdirectory(apply_femur_seg_to_CT)
+add_subdirectory(flip_seg)

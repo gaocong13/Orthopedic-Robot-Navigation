@@ -1,0 +1,4 @@
+include_directories(include)
+
+add_subdirectory(example_drr_proj_justin_snakemodel)
+

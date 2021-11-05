@@ -20,9 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-add_subdirectory(Femoroplasty)
-add_subdirectory(Carm_PolarisMarker_Calibration)
-add_subdirectory(Carm_Xray_Simulation)
-add_subdirectory(Robotic_Injection_Device)
-add_subdirectory(Robotic_Continuum_Manipulator)
+add_executable(xreg-gen-preproc-deepdrr xreg_gen_preproc_deepdrr_main.cpp)
 
+target_link_libraries(xreg-gen-preproc-deepdrr xreg-ipcai)
+
+install(TARGETS xreg-gen-preproc-deepdrr)

@@ -20,9 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-add_subdirectory(Femoroplasty)
-add_subdirectory(Carm_PolarisMarker_Calibration)
-add_subdirectory(Carm_Xray_Simulation)
-add_subdirectory(Robotic_Injection_Device)
-add_subdirectory(Robotic_Continuum_Manipulator)
+set(EXE_NAME "${XREG_EXE_PREFIX}initial-pelvis-pose-estimate")
+
+add_executable(${EXE_NAME} xreg_initial_pelvis_pose_estimate_main.cpp)
+
+target_link_libraries(${EXE_NAME} PUBLIC ${XREG_EXE_LIBS_TO_LINK})
+
+install(TARGETS ${EXE_NAME})
 

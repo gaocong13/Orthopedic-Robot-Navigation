@@ -20,9 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-add_subdirectory(Femoroplasty)
-add_subdirectory(Carm_PolarisMarker_Calibration)
-add_subdirectory(Carm_Xray_Simulation)
-add_subdirectory(Robotic_Injection_Device)
-add_subdirectory(Robotic_Continuum_Manipulator)
+add_executable(xreg-export-ipcai-xform xreg_export_ipcai_xform_main.cpp)
 
+target_link_libraries(xreg-export-ipcai-xform xreg-ipcai)
+
+install(TARGETS xreg-export-ipcai-xform)

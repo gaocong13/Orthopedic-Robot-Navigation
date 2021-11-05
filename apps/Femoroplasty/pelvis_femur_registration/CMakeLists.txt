@@ -1,0 +1,6 @@
+add_subdirectory(femoroplasty_regi_multiview_femur)
+add_subdirectory(femoroplasty_regi_multiview_pelvis_and_femur)
+add_subdirectory(femoroplasty_regi_singleview_femur)
+add_subdirectory(femoroplasty_regi_singleview_pelvis_and_femur)
+add_subdirectory(femur_regi_singleview)
+add_subdirectory(pelvis_femur_regi_multiview)
