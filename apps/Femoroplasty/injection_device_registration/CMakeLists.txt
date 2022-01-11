@@ -1,3 +1,3 @@
-add_subdirectory(device_femur_regi_multiview)
+#add_subdirectory(device_femur_regi_multiview)
 add_subdirectory(device_multiconfig_singleview)
 add_subdirectory(device_regi_singleview)
