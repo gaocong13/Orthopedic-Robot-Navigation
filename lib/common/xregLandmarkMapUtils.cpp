@@ -235,6 +235,25 @@ void CreateCorrespondencePointListsHelper(const tMap1& pts1_map, const tMap2& pt
   dst_pts1->reserve(num_pts);
   dst_pts2->reserve(num_pts);
 
+  std::vector<key_type> common_names_vec;
+  for (const auto& name : common_names)
+  {
+    common_names_vec.push_back(name);
+  }
+
+  std::sort(common_names_vec.begin(), common_names_vec.end());
+
+  for (const auto& name : common_names_vec)
+  {
+    dst_pts1->push_back(pts1_map.find(name)->second);
+    dst_pts2->push_back(pts2_map.find(name)->second);
+
+    if (names)
+    {
+      names->push_back(name);
+    }
+  }
+/*
   for (const auto& name : common_names)
   {
     dst_pts1->push_back(pts1_map.find(name)->second);
@@ -245,6 +264,7 @@ void CreateCorrespondencePointListsHelper(const tMap1& pts1_map, const tMap2& pt
       names->push_back(name);
     }
   }
+*/
 }
 
 }  // un-named
@@ -255,7 +275,7 @@ xreg::CreateCorrespondencePointLists(const LandMap3& pts1_map, const LandMap3& p
   Pt3List pts1;
   Pt3List pts2;
   StrList names;
-  
+
   CreateCorrespondencePointListsHelper(pts1_map, pts2_map, &pts1, &pts2, &names);
 
   return std::make_tuple(pts1, pts2, names);
@@ -267,7 +287,7 @@ xreg::CreateCorrespondencePointLists(const LandMap3& pts1_map, const LandMap2& p
   Pt3List pts1;
   Pt2List pts2;
   StrList names;
-  
+
   CreateCorrespondencePointListsHelper(pts1_map, pts2_map, &pts1, &pts2, &names);
 
   return std::make_tuple(pts1, pts2, names);
@@ -279,7 +299,7 @@ xreg::CreateCorrespondencePointLists(const LandMap2& pts1_map, const LandMap3& p
   Pt2List pts1;
   Pt3List pts2;
   StrList names;
-  
+
   CreateCorrespondencePointListsHelper(pts1_map, pts2_map, &pts1, &pts2, &names);
 
   return std::make_tuple(pts1, pts2, names);
@@ -291,7 +311,7 @@ xreg::CreateCorrespondencePointLists(const LandMap2& pts1_map, const LandMap2& p
   Pt2List pts1;
   Pt2List pts2;
   StrList names;
-  
+
   CreateCorrespondencePointListsHelper(pts1_map, pts2_map, &pts1, &pts2, &names);
 
   return std::make_tuple(pts1, pts2, names);
@@ -312,7 +332,7 @@ Pt2 DropPtY(const Pt3& p)
   Pt2 q;
   q[0] = p[0];
   q[1] = p[2];
-  
+
   return q;
 }
 
@@ -329,7 +349,7 @@ xreg::LandMap2 xreg::DropPtDim(const LandMap3& src_pts, const size_type dim)
 
   LandMap2 dst_lands;
   dst_lands.reserve(src_pts.size());
-  
+
   auto drop_fn = (dim == 2) ? DropPtZ : ((dim == 0) ? DropPtX : DropPtY);
 
   for (const auto& kv3 : src_pts)
@@ -345,7 +365,7 @@ xreg::LandMap2 xreg::PhysPtsToInds(const LandMap2& src_pts,
                                    const CoordScalar pixel_spacing_y)
 {
   auto dst_inds = src_pts;
-  
+
   for (auto& kv : dst_inds)
   {
     kv.second[0] /= pixel_spacing_x;
@@ -361,7 +381,7 @@ xreg::LandMap3 xreg::PhysPtsToInds(const LandMap3& src_pts,
                                    const CoordScalar pixel_spacing_z)
 {
   auto dst_inds = src_pts;
-  
+
   for (auto& kv : dst_inds)
   {
     kv.second[0] /= pixel_spacing_x;
@@ -371,4 +391,3 @@ xreg::LandMap3 xreg::PhysPtsToInds(const LandMap3& src_pts,
 
   return dst_inds;
 }
-
