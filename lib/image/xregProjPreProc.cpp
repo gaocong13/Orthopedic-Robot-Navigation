@@ -45,12 +45,12 @@ void xreg::ProjPreProc::operator()()
   for (size_type proj_idx = 0; proj_idx < num_projs; ++proj_idx)
   {
     this->dout() << "proj: " << proj_idx << std::endl;
-    
+
     const auto& input_proj_data = input_projs[proj_idx];
 
     auto output_proj = input_proj_data;
 
-    auto& cam   = output_proj.cam; 
+    auto& cam   = output_proj.cam;
     auto& img   = output_proj.img;
     auto& lands = output_proj.landmarks;
 
@@ -73,15 +73,37 @@ void xreg::ProjPreProc::operator()()
       }
     }
 
+    // This is specifically designed for CM cropping. Landmarks ld1 & ld2 refer to the base and top
+    // landmarks of the snake
+    auto ld1_fcsv = lands.find("ld1");
+    auto ld2_fcsv = lands.find("ld2");
+    Pt2 ld1, ld2;
+    bool ld1_flag = false;
+    bool ld2_flag = false;
+
+    if (ld1_fcsv != lands.end()){
+      ld1 = ld1_fcsv->second;
+      ld1_flag = true;
+    }
+    if (ld2_fcsv != lands.end()){
+      ld2 = ld2_fcsv->second;
+      ld2_flag = true;
+    }
+
+    if (ld1_flag && ld2_flag){
+      this->dout() << "cropping intensity image to ROI and camera model..." << std::endl;
+      std::tie(cam, img) = CropROIPixels(cam, img.GetPointer(), ld1, ld2);
+    }
+
     if (img && !params.no_log_remap)
     {
       this->dout() << "log remapping..." << std::endl;
-      
+
       auto log_xform = ImageIntensLogTransFilter::New();
       log_xform->SetInput(img);
       log_xform->SetUseMaxIntensityAsI0(true);
       log_xform->Update();
-      
+
       img = log_xform->GetOutput();
     }
 
@@ -93,11 +115,11 @@ void xreg::ProjPreProc::operator()()
 
       SegmentMetalInXRay metal_seg;
       metal_seg.set_debug_output_stream(*this);
-      
+
       metal_seg.binarize = true;
       metal_seg.dilation_radius = 3;
       metal_seg.src_img = img;
-      
+
       metal_seg.thresh = params.auto_mask_thresh;
       metal_seg.level  = params.auto_mask_level;
 
@@ -119,7 +141,7 @@ void xreg::ProjPreProc::operator()()
         auto& mask = output_mask_proj.img;
 
         const auto img_size = mask->GetLargestPossibleRegion().GetSize();
-        
+
         const unsigned long tot_num_pix = static_cast<unsigned long>(img_size[0]) *
                                           static_cast<unsigned long>(img_size[1]);
 
@@ -133,11 +155,10 @@ void xreg::ProjPreProc::operator()()
 
       output_mask_proj.cam = cam;
       output_mask_proj.landmarks = lands;
-      
+
       output_mask_projs.push_back(output_mask_proj);
     }
   }
 
   this->dout() << "pre-processing complete..." << std::endl;
 }
-
