@@ -1,4 +1,5 @@
 include_directories(include)
 
 add_subdirectory(example_drr_proj_justin_snakemodel)
-
+add_subdirectory(newsnake_sim_singleview)
+add_subdirectory(regi2d3d_replay_newsnake)

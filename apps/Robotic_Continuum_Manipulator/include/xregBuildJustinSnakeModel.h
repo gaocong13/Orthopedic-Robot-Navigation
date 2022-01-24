@@ -16,7 +16,7 @@
 #include "itkWindowedSincInterpolateImageFunction.h"
 #include "itkImage.h"
 #include "math.h"
-#include "stdio.h"
+//#include "stdio.h"
 #include "stdlib.h"
 #include "time.h"
 #include "omp.h"
