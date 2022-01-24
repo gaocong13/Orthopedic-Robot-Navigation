@@ -51,6 +51,7 @@ class SO3OptVarsEuler;
 class SO3OptVarsOnlyX;
 class SO3OptVarsOnlyY;
 class SO3OptVarsOnlyZ;
+class SnakeOptVars;
 
 std::shared_ptr<SE3OptVars> ReadSE3OptVarsH5(const H5::CommonFG& h5);
 
@@ -78,7 +79,8 @@ void WriteSE3OptVarsH5(const SO3OptVarsOnlyY& opt_vars, H5::CommonFG* h5);
 
 void WriteSE3OptVarsH5(const SO3OptVarsOnlyZ& opt_vars, H5::CommonFG* h5);
 
+void WriteSE3OptVarsH5(const SnakeOptVars& opt_vars, H5::CommonFG* h5);
+
 }  // xreg
 
 #endif
-

@@ -89,6 +89,10 @@ std::shared_ptr<xreg::SE3OptVars> xreg::ReadSE3OptVarsH5(const H5::CommonFG& h5)
   {
     se3_vars = std::make_shared<SO3OptVarsOnlyZ>();
   }
+  else if (param_str == "se3-snake")
+  {
+    se3_vars = std::make_shared<SnakeOptVars>();
+  }
   else
   {
     xregThrow("unsupported SE3 parameterization: %s", param_str.c_str());
@@ -102,7 +106,7 @@ void xreg::WriteSE3OptVarsH5(const SE3OptVars& opt_vars, H5::CommonFG* h5)
   WriteSingleScalarH5("num-params", opt_vars.num_params(), h5);
 
   const auto* ov = &opt_vars;
-  
+
   const auto* ov_e = dynamic_cast<const SE3OptVarsEuler*>(ov);
   if (ov_e)
   {
@@ -180,7 +184,15 @@ void xreg::WriteSE3OptVarsH5(const SE3OptVars& opt_vars, H5::CommonFG* h5)
                       }
                       else
                       {
-                        xregThrow("Unsupported SE3 Parameterization");
+                        const auto* ov_se3_snake = dynamic_cast<const SnakeOptVars*>(ov);
+                        if (ov_se3_snake)
+                        {
+                          WriteSE3OptVarsH5(*ov_se3_snake, h5);
+                        }
+                        else
+                        {
+                          xregThrow("Unsupported SE3 Parameterization");
+                        }
                       }
                     }
                   }
@@ -261,3 +273,7 @@ void xreg::WriteSE3OptVarsH5(const SO3OptVarsOnlyZ& opt_vars, H5::CommonFG* h5)
   WriteStringH5("parameterization", "rot-z-only", h5, false);
 }
 
+void xreg::WriteSE3OptVarsH5(const SnakeOptVars& opt_vars, H5::CommonFG* h5)
+{
+  WriteStringH5("parameterization", "se3-snake", h5, false);
+}
