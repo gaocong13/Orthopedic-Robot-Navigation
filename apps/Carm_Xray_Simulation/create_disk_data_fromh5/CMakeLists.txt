@@ -22,6 +22,6 @@
 
 add_executable(xreg-gen-create-disk-data-fromh5 xreg_gen_create_disk_data_fromh5_main.cpp)
 
-target_link_libraries(xreg-gen-create-disk-data-fromh5 xreg-ipcai)
+target_link_libraries(xreg-gen-create-disk-data-fromh5 PUBLIC ${XREG_EXE_LIBS_TO_LINK})
 
 install(TARGETS xreg-gen-create-disk-data-fromh5)

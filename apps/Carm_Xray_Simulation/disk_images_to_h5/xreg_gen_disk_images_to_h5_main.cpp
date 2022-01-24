@@ -24,6 +24,7 @@
 
 #include <fmt/format.h>
 
+#include "xregProgOptUtils.h"
 #include "xregFCSVUtils.h"
 #include "xregITKIOUtils.h"
 #include "xregLandmarkMapUtils.h"
@@ -43,7 +44,6 @@
 #include "xregImageAddPoissonNoise.h"
 #include "xregImageIntensLogTrans.h"
 
-#include "IPCAICommon.h"
 
 int main(int argc, char* argv[])
 {
@@ -64,7 +64,6 @@ int main(int argc, char* argv[])
   po.set_arg_usage("< Dst H5 File > < Images root folder path > < File prefix (eg: DeepDRR)>"
                    "< SpecID 1 > < Image Num 1 > < SpecID 2 > < Image Num 2 >... < SpecID N > < Image Num N >");
   po.set_min_num_pos_args(4);
-  po.set_help_epilogue(fmt::format("\nIPCAI version: {}", IPCAIVersionStr()));
 
   po.add("logxform", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "logxform",
          "log intensity conversion.")

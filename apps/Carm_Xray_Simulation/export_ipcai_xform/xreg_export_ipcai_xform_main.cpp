@@ -24,6 +24,7 @@
 
 #include <fmt/format.h>
 
+#include "xregProgOptUtils.h"
 #include "xregFCSVUtils.h"
 #include "xregITKIOUtils.h"
 #include "xregLandmarkMapUtils.h"
@@ -41,8 +42,6 @@
 #include "xregRayCastInterface.h"
 #include "xregHUToLinAtt.h"
 #include "xregImageAddPoissonNoise.h"
-
-#include "IPCAICommon.h"
 
 int main(int argc, char* argv[])
 {
@@ -62,7 +61,6 @@ int main(int argc, char* argv[])
 
   po.set_arg_usage("<IPCAI full res H5 File> <output path>");
   po.set_min_num_pos_args(2);
-  po.set_help_epilogue(fmt::format("\nIPCAI version: {}", IPCAIVersionStr()));
 
   po.add("no-ras2lps", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-ras2lps",
          "Do NOT convert RAS to LPS (or LPS to RAS) for the 3D landmarks; "

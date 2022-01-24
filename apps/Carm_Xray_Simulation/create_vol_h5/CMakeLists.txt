@@ -22,6 +22,6 @@
 
 add_executable(xreg-gen-create-vol-h5 xreg_gen_create_vol_h5_main.cpp)
 
-target_link_libraries(xreg-gen-create-vol-h5 xreg-ipcai)
+target_link_libraries(xreg-gen-create-vol-h5 PUBLIC ${XREG_EXE_LIBS_TO_LINK})
 
 install(TARGETS xreg-gen-create-vol-h5)

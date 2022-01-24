@@ -24,6 +24,7 @@
 
 #include <fmt/format.h>
 
+#include "xregProgOptUtils.h"
 #include "xregFCSVUtils.h"
 #include "xregITKIOUtils.h"
 #include "xregLandmarkMapUtils.h"
@@ -43,8 +44,6 @@
 #include "xregImageAddPoissonNoise.h"
 #include "xregImageIntensLogTrans.h"
 
-#include "IPCAICommon.h"
-
 int main(int argc, char* argv[])
 {
   using namespace xreg;
@@ -62,7 +61,6 @@ int main(int argc, char* argv[])
 
   po.set_arg_usage("< input image path > < output path >");
   po.set_min_num_pos_args(2);
-  po.set_help_epilogue(fmt::format("\nIPCAI version: {}", IPCAIVersionStr()));
 
   po.add("logxform", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "logxform",
          "log intensity conversion.")

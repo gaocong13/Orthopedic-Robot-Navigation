@@ -22,6 +22,6 @@
 
 add_executable(xreg-export-ipcai-xform xreg_export_ipcai_xform_main.cpp)
 
-target_link_libraries(xreg-export-ipcai-xform xreg-ipcai)
+target_link_libraries(xreg-export-ipcai-xform PUBLIC ${XREG_EXE_LIBS_TO_LINK})
 
 install(TARGETS xreg-export-ipcai-xform)

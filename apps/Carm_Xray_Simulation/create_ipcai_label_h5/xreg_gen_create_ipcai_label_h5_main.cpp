@@ -24,6 +24,7 @@
 
 #include <fmt/format.h>
 
+#include "xregProgOptUtils.h"
 #include "xregFCSVUtils.h"
 #include "xregITKIOUtils.h"
 #include "xregLandmarkMapUtils.h"
@@ -41,8 +42,6 @@
 #include "xregRayCastInterface.h"
 #include "xregHUToLinAtt.h"
 #include "xregImageAddPoissonNoise.h"
-
-#include "IPCAICommon.h"
 
 int main(int argc, char* argv[])
 {
@@ -63,8 +62,7 @@ int main(int argc, char* argv[])
   po.set_arg_usage("<IPCAI full res H5 File> <Dst H5 File> <3D Landmarks>"
                    "<xreg output path> <real output path> <debug output path>");
   po.set_min_num_pos_args(4);
-  po.set_help_epilogue(fmt::format("\nIPCAI version: {}", IPCAIVersionStr()));
-
+  
   po.add("preproc", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "preproc",
          "Apply standard preprocessing such as cropping and, if the \"intensity\" flag is set, "
          "log intensity conversion.")

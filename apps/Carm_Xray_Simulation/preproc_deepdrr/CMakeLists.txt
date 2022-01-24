@@ -22,6 +22,6 @@
 
 add_executable(xreg-gen-preproc-deepdrr xreg_gen_preproc_deepdrr_main.cpp)
 
-target_link_libraries(xreg-gen-preproc-deepdrr xreg-ipcai)
+target_link_libraries(xreg-gen-preproc-deepdrr PUBLIC ${XREG_EXE_LIBS_TO_LINK})
 
 install(TARGETS xreg-gen-preproc-deepdrr)

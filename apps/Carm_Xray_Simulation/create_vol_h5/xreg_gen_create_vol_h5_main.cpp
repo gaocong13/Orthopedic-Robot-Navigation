@@ -24,6 +24,7 @@
 
 #include <fmt/format.h>
 
+#include "xregProgOptUtils.h"
 #include "xregFCSVUtils.h"
 #include "xregITKIOUtils.h"
 #include "xregAnatCoordFrames.h"
@@ -33,8 +34,6 @@
 #include "xregH5ProjDataIO.h"
 #include "xregOpenCVUtils.h"
 #include "xregHDF5.h"
-
-#include "IPCAICommon.h"
 
 int main(int argc, char* argv[])
 {
@@ -53,7 +52,6 @@ int main(int argc, char* argv[])
 
   po.set_arg_usage("<Dst H5 File> <Vol path> <Spec ID 1> <Spec ID 2> ... <Spec ID N>>");
   po.set_min_num_pos_args(3);
-  po.set_help_epilogue(fmt::format("\nIPCAI version: {}", IPCAIVersionStr()));
 
   po.add_backend_flags();
 

@@ -24,6 +24,7 @@
 
 #include <fmt/format.h>
 
+#include "xregProgOptUtils.h"
 #include "xregFCSVUtils.h"
 #include "xregITKIOUtils.h"
 #include "xregLandmarkMapUtils.h"
@@ -41,8 +42,6 @@
 #include "xregRayCastInterface.h"
 #include "xregHUToLinAtt.h"
 #include "xregImageAddPoissonNoise.h"
-
-#include "IPCAICommon.h"
 
 int main(int argc, char* argv[])
 {
@@ -67,7 +66,6 @@ int main(int argc, char* argv[])
                    "<Proj. Data File> <Pelvis Pose>  "
                    "<Output Single-Chan. 2D Seg.> [<Output Multi-Chan. 2D Seg.>]");
   po.set_min_num_pos_args(5);
-  po.set_help_epilogue(fmt::format("\nIPCAI version: {}", IPCAIVersionStr()));
 
   po.add("pat-up", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "pat-up",
          "If necessary, rotate the output projections to have the patient oriented \"up.\" "

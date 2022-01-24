@@ -22,6 +22,6 @@
 
 add_executable(xreg-gen-disk-images-to-h5 xreg_gen_disk_images_to_h5_main.cpp)
 
-target_link_libraries(xreg-gen-disk-images-to-h5 xreg-ipcai)
+target_link_libraries(xreg-gen-disk-images-to-h5 PUBLIC ${XREG_EXE_LIBS_TO_LINK})
 
 install(TARGETS xreg-gen-disk-images-to-h5)
