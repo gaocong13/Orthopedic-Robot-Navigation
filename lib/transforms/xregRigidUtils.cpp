@@ -88,8 +88,8 @@ xreg::Pt6 xreg::ExpRigid4x4ToPt6(const Mat4x4& T)
 {
   Pt6 x;
   Mat4x4 M = LogSE3ToMat4x4(T);
-  x.head(3) = WedgeSkew(T.block(0,0,3,3));
-  x.tail(3) = T.block(0,3,3,1);
+  x.head(3) = WedgeSkew(M.block(0,0,3,3));
+  x.tail(3) = M.block(0,3,3,1);
 
   return x;
 }
