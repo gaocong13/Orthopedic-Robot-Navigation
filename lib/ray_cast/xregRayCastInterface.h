@@ -144,12 +144,12 @@ public:
   void distribute_xform_among_cam_models(const FrameTransform& xform_cam_to_itk_phys);
 
 
-  void distribute_xforms_among_cam_models_perdeviceview(const ListOfFrameTransformLists& xforms_cam_to_itk_phys, size_type vol_idx);
+  void distribute_xforms_among_cam_models_perdeviceview(const ListOfFrameTransformLists& xforms_cam_to_itk_phys, size_type vol_idx, size_type num_device_cams = 1);
 
   /// \brief Assign a single pose to each camera model.
   ///
   /// \see distribute_xforms_among_cam_models
-  void distribute_xform_among_cam_models_perdeviceview(const FrameTransformList& xform_cam_to_itk_phys, size_type vol_idx);
+  void distribute_xform_among_cam_models_perdeviceview(const FrameTransformList& xform_cam_to_itk_phys, size_type vol_idx, size_type num_device_cams = 1);
 
   /// \brief Sets the ray casting step size to be used
   ///

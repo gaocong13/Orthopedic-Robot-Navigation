@@ -118,7 +118,7 @@ void xreg::RayCaster::distribute_xform_among_cam_models(const FrameTransform& xf
   distribute_xforms_among_cam_models(FrameTransformList(1, xform_cam_to_itk_phys));
 }
 
-void xreg::RayCaster::distribute_xforms_among_cam_models_perdeviceview(const ListOfFrameTransformLists& xforms_cam_to_itk_phys, size_type vol_idx)
+void xreg::RayCaster::distribute_xforms_among_cam_models_perdeviceview(const ListOfFrameTransformLists& xforms_cam_to_itk_phys, size_type vol_idx, size_type num_device_cams)
 {
   const size_type num_passed_xforms = xforms_cam_to_itk_phys[vol_idx].size();
 
@@ -131,13 +131,13 @@ void xreg::RayCaster::distribute_xforms_among_cam_models_perdeviceview(const Lis
   {
     for (size_type passed_proj_idx = 0; passed_proj_idx < num_passed_xforms; ++passed_proj_idx, ++global_proj_idx)
     {
-      xforms_cam_to_itk_phys_[global_proj_idx] = xforms_cam_to_itk_phys[vol_idx + cam_idx][passed_proj_idx];
+      xforms_cam_to_itk_phys_[global_proj_idx] = xforms_cam_to_itk_phys[vol_idx + cam_idx*num_device_cams][passed_proj_idx];
       cam_model_for_proj_[global_proj_idx] = cam_idx;
     }
   }
 }
 
-void xreg::RayCaster::distribute_xform_among_cam_models_perdeviceview(const FrameTransformList& xforms_cam_to_itk_phys, size_type vol_idx)
+void xreg::RayCaster::distribute_xform_among_cam_models_perdeviceview(const FrameTransformList& xforms_cam_to_itk_phys, size_type vol_idx, size_type num_device_cams)
 {
   ListOfFrameTransformLists list_xforms_cam_to_itk_phys;
   FrameTransformList temp_list;
@@ -147,7 +147,7 @@ void xreg::RayCaster::distribute_xform_among_cam_models_perdeviceview(const Fram
     list_xforms_cam_to_itk_phys.push_back(temp_list);
     temp_list.clear();
   }
-  distribute_xforms_among_cam_models_perdeviceview(list_xforms_cam_to_itk_phys, vol_idx);
+  distribute_xforms_among_cam_models_perdeviceview(list_xforms_cam_to_itk_phys, vol_idx, num_device_cams);
 }
 
 void xreg::RayCaster::set_ray_step_size(const CoordScalar& step_size)
