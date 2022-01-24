@@ -90,7 +90,7 @@ CropImage2DBoundary(const itk::Image<tPixelType,2>* src_img, const unsigned long
 {
   using Img       = itk::Image<tPixelType,2>;
   using ROIFilter = itk::RegionOfInterestImageFilter<Img,Img>;
-  
+
   const auto src_img_size = src_img->GetLargestPossibleRegion().GetSize();
 
   typename Img::SizeType roi_size;
@@ -109,7 +109,36 @@ CropImage2DBoundary(const itk::Image<tPixelType,2>* src_img, const unsigned long
   img_roi_filter->SetInput(src_img);
   img_roi_filter->SetRegionOfInterest(roi);
   img_roi_filter->Update();
-  
+
+ return img_roi_filter->GetOutput();
+}
+
+template <class tPixelType>
+typename itk::Image<tPixelType,2>::Pointer
+CropImage2DLandmarks(const itk::Image<tPixelType,2>* src_img, const Eigen::Matrix<Float,2,1> ld1, const Eigen::Matrix<Float,2,1> ld2)
+{
+  using Img       = itk::Image<tPixelType,2>;
+  using ROIFilter = itk::RegionOfInterestImageFilter<Img,Img>;
+
+  const auto src_img_size = src_img->GetLargestPossibleRegion().GetSize();
+
+  typename Img::SizeType roi_size;
+  roi_size[0] = ld2[0] - ld1[0] + 1;
+  roi_size[1] = ld2[1] - ld1[1] + 1;
+
+  typename Img::IndexType roi_start;
+  roi_start[0] = ld1[0];
+  roi_start[1] = ld1[1];
+
+  typename Img::RegionType roi;
+  roi.SetSize(roi_size);
+  roi.SetIndex(roi_start);
+
+  auto img_roi_filter = ROIFilter::New();
+  img_roi_filter->SetInput(src_img);
+  img_roi_filter->SetRegionOfInterest(roi);
+  img_roi_filter->Update();
+
  return img_roi_filter->GetOutput();
 }
 
@@ -122,7 +151,7 @@ ITKPadImage(const itk::Image<tPixelScalar,tN>* src_img,
 {
   using PixelScalar = tPixelScalar;
   using size_type   = tSizeScalar;
-  
+
   constexpr unsigned int kDIM = tN;
 
   using Img    = itk::Image<PixelScalar,kDIM>;
@@ -140,7 +169,7 @@ ITKPadImage(const itk::Image<tPixelScalar,tN>* src_img,
   {
     pad_vol_size[i] += start_pad[i] + end_pad[i];
   }
-  
+
   ITKReg pad_reg(pad_vol_size);
 
   itk::ContinuousIndex<double,kDIM> new_zero_idx_wrt_old_idx;
@@ -150,9 +179,9 @@ ITKPadImage(const itk::Image<tPixelScalar,tN>* src_img,
   }
 
   typename Img::PointType new_zero_idx_wrt_phys;
-  
+
   src_img->TransformContinuousIndexToPhysicalPoint(new_zero_idx_wrt_old_idx, new_zero_idx_wrt_phys);
-  
+
   ImgPtr dst_img = Img::New();
 
   dst_img->SetDirection(src_img->GetDirection());
@@ -161,7 +190,7 @@ ITKPadImage(const itk::Image<tPixelScalar,tN>* src_img,
   dst_img->SetRegions(pad_reg);
   dst_img->Allocate();
   dst_img->FillBuffer(fill_val);
-        
+
   // copy pixels from src_img
   itk::ImageRegionConstIterator<Img> src_img_it(src_img, src_img_reg);
 
@@ -170,7 +199,7 @@ ITKPadImage(const itk::Image<tPixelScalar,tN>* src_img,
   dst_reg_in_pad.SetIndex(1, start_pad[1]);
   dst_reg_in_pad.SetIndex(2, start_pad[2]);
   dst_reg_in_pad.SetSize(src_img_size);
-  
+
   itk::ImageRegionIterator<Img> pad_img_it(dst_img, dst_reg_in_pad);
 
   while (!src_img_it.IsAtEnd())
@@ -188,4 +217,3 @@ ITKPadImage(const itk::Image<tPixelScalar,tN>* src_img,
 }  // xreg
 
 #endif
-
