@@ -743,6 +743,184 @@ void xreg::Intensity2D3DRegi::device_obj_fn(
   }
 }
 
+void xreg::Intensity2D3DRegi::snake_obj_fn(
+                    const ListOfFrameTransformLists& frame_xforms_per_object,
+                    const CamModelList* cams_per_proj,
+                    ScalarList* sim_vals_ptr,
+                    size_type num_snake_cams)
+{
+  const bool compute_penalty = penalty_fn_.get();
+
+  const size_type nv = num_vols();
+
+  const auto inter_frame_xforms = apply_inter_transforms_for_obj_fn(frame_xforms_per_object);
+
+  if (cams_per_proj)
+  {
+    ray_caster_->set_camera_models(*cams_per_proj);
+  }
+
+  const bool orig_ray_caster_use_bg_projs = ray_caster_->use_bg_projs();
+
+  // Perform the ray casting of multiple, or one, object(s), by looping over
+  // each volume, setting the pose parameters for the current volume, and
+  // ray casting for the current volume. The projection buffers are initialized
+  // for the first projection and then accumulated afterwards.
+
+  if (has_a_static_vol_)
+  {
+    ray_caster_->set_use_bg_projs(true);
+  }
+  ray_caster_->use_proj_store_replace_method();
+
+  size_type num_views = sim_metrics_.size();
+
+  for (size_type vol_idx = 0; vol_idx < nv/num_views; ++vol_idx)
+  {
+    if (!cams_per_proj)
+    {
+      // camera models are constant (1 per view), distribute transforms amongst cameras
+      ray_caster_->distribute_xforms_among_cam_models_perdeviceview(inter_frame_xforms, vol_idx, num_snake_cams);
+    }
+    else
+    {
+      const CamModelList& cams = *cams_per_proj;
+      xregASSERT(num_projs_per_view_ == cams.size());
+
+      // create a separate camera model for each projection
+      for (size_type proj_idx = 0; proj_idx < num_projs_per_view_; ++proj_idx)
+      {
+        ray_caster_->set_proj_cam_model(proj_idx, proj_idx);
+
+        ray_caster_->xform_cam_to_itk_phys(proj_idx) = inter_frame_xforms[vol_idx][proj_idx];
+      }
+    }
+
+    ray_caster_->compute(vol_inds_in_ray_caster_[vol_idx]);
+
+    if (has_a_static_vol_)
+    {
+      ray_caster_->set_use_bg_projs(false);
+    }
+
+    ray_caster_->use_proj_store_accum_method();
+    // WriteITKImageRemap8bpp(ray_caster_->proj(0).GetPointer(), "/home/cong/Research/Snake_Registration/Simulation_JustinNewSnake/output/" + std::to_string(vol_idx) + ".png");
+  }
+
+  // this is equivalent to the number of views
+  const size_type num_sim_metrics = sim_metrics_.size();
+
+  // e.g. for each view, compute the similarity scores for each candidate projection
+  for (size_type sim_idx = 0; sim_idx < num_sim_metrics; ++sim_idx)
+  {
+    sim_metrics_[sim_idx]->compute();
+  }
+
+  // combine the similarity scores for each candidate projection over all of
+  // the views
+  ScalarList& sim_vals = *sim_vals_ptr;
+  xregASSERT(sim_vals.size() == num_projs_per_view_);
+
+  sim_metric_combiner_->compute();
+
+  for (size_type proj_idx = 0; proj_idx < num_projs_per_view_; ++proj_idx)
+  {
+    sim_vals[proj_idx] = sim_metric_combiner_->sim_val(proj_idx);
+  }
+
+  // Handle regularization if it has been specified
+  if (compute_penalty)
+  {
+    penalty_fn_->compute(inter_frame_xforms, num_projs_per_view_,
+                         ray_caster_->camera_models(),
+                         ray_caster_->camera_model_proj_associations(),
+                         intermediate_frames_wrt_vol_,
+                         intermediate_frames_,
+                         regi_xform_guesses_,
+                         &frame_xforms_per_object);
+
+    if (include_penalty_in_obj_fn_)
+    {
+      auto penalty_vals = penalty_fn_->reg_vals();
+
+      if (!coeffs_img_sim_.empty())
+      {
+        for (size_type proj_idx = 0; proj_idx < num_projs_per_view_; ++proj_idx)
+        {
+          sim_vals[proj_idx] *= coeffs_img_sim_[proj_idx];
+        }
+      }
+
+      if (!coeffs_penalty_fns_.empty())
+      {
+        for (size_type proj_idx = 0; proj_idx < num_projs_per_view_; ++proj_idx)
+        {
+          penalty_vals[proj_idx] *= coeffs_penalty_fns_[proj_idx];
+        }
+      }
+
+      for (size_type proj_idx = 0; proj_idx < num_projs_per_view_; ++proj_idx)
+      {
+        sim_vals[proj_idx] += penalty_vals[proj_idx];
+      }
+    }
+  }
+
+  if (has_a_static_vol_)
+  {
+    ray_caster_->set_use_bg_projs(orig_ray_caster_use_bg_projs);
+  }
+
+  ++num_obj_fn_evals_;
+}
+
+void xreg::Intensity2D3DRegi::snake_obj_fn(
+                    const ListOfListsOfScalarLists& opt_vec_space_vals,
+                    ScalarList* sim_vals_ptr,
+                    size_type num_snake_cams)
+{
+  const SE3OptVars& opt_vars = *opt_vars_;
+
+  const size_type num_params_per_xform = 6;//opt_vars.num_params();
+
+  const size_type nv = num_vols();
+
+  // Map from optimization vector space to rigid transformation parameterizations and
+  // camera models
+  for (size_type vol_idx = 0; vol_idx < nv; ++vol_idx)
+  {
+    tmp_frame_xforms_[vol_idx].resize(num_projs_per_view_);
+
+    // compute frame transformations
+    for (size_type proj_idx = 0; proj_idx < num_projs_per_view_; ++proj_idx)
+    {
+      tmp_frame_xforms_[vol_idx][proj_idx] =
+        opt_vars(Eigen::Map<PtN>(const_cast<Scalar*>(&opt_vec_space_vals[vol_idx][proj_idx][0]),
+                                         num_params_per_xform));
+    }
+  }
+
+  if (!src_and_obj_pose_opt_vars_)
+  {
+    snake_obj_fn(tmp_frame_xforms_, nullptr, sim_vals_ptr, num_snake_cams);
+  }
+  else
+  {
+    // this is a current limitation of this implementation
+    xregASSERT(nv == 1);
+
+    // create a separate camera model for each projection
+    for (size_type proj_idx = 0; proj_idx < num_projs_per_view_; ++proj_idx)
+    {
+      tmp_cam_models_[proj_idx] = this->src_and_obj_pose_opt_vars_->cam(
+          Eigen::Map<PtN>(const_cast<Scalar*>(&opt_vec_space_vals[0][proj_idx][0]),
+                                         num_params_per_xform));
+    }
+
+    snake_obj_fn(tmp_frame_xforms_, &tmp_cam_models_, sim_vals_ptr, num_snake_cams);
+  }
+}
+
 void xreg::Intensity2D3DRegi::obj_fn(
                     const ListOfFrameTransformLists& frame_xforms_per_object,
                     const CamModelList* cams_per_proj,

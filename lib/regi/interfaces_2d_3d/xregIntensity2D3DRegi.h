@@ -361,6 +361,21 @@ protected:
   virtual void device_obj_fn(const ListOfListsOfScalarLists& opt_vec_space_vals,
                       ScalarList* sim_vals_ptr);
 
+  virtual void snake_obj_fn(const ListOfFrameTransformLists& frame_xforms_per_object,
+                      const CamModelList* cams_per_proj,
+                      ScalarList* sim_vals_ptr,
+                      size_type num_snake_cams);
+
+  /// \brief Objective function that computes DRRs and similarity metrics.
+  ///
+  /// This should be called by the optimizer in some way, maybe not directly,
+  /// depending on the optimization interface.
+  /// opt_vec_space_vals[i][j][k] is the kth parameter of the jth SE(3) (projection) element for the ith object
+  /// (*sim_vals_ptr)[j] is the computed similarity value corresponding to the jth projection element
+  virtual void snake_obj_fn(const ListOfListsOfScalarLists& opt_vec_space_vals,
+                      ScalarList* sim_vals_ptr,
+                      size_type num_snake_cams);
+
   /// \brief This should be called by the derived class before entering the main
   ///        loop of the algorithm.
   virtual void before_first_iteration();
