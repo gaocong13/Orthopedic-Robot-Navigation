@@ -108,7 +108,7 @@ private:
   using HomogeneousMatXformFn = Mat4x4 (*) (const CoordScalar);
 
   unsigned long lookup_xform_idx(const unsigned long k) const;
-  
+
   // Using std::array<HomogeneousMatXformFn,6> causes an ICE on VS 2013/2015
   HomogeneousMatXformFn xform_fns_[6];
 
@@ -218,7 +218,7 @@ public:
 
   /// \brief Parameterization dimensionality: 3
   unsigned long num_params() const override;
-  
+
   /// \brief Retrieve the order (left to right zero-based) of the X Rotation
   unsigned long rot_x_order() const;
 
@@ -230,9 +230,9 @@ public:
 
 private:
   using HomogeneousMatXformFn = Mat4x4 (*) (const CoordScalar);
-  
+
   unsigned long lookup_xform_idx(const unsigned long k) const;
-  
+
   HomogeneousMatXformFn xform_fns_[3];
 
   std::array<unsigned long,3> param_idx_;
@@ -281,6 +281,15 @@ public:
 
 private:
   CameraModel ref_cam_;
+};
+
+class SnakeOptVars : public SE3OptVars
+{
+public:
+  FrameTransform operator()(const PtN& x) const override;
+
+  /// \brief Parameterization dimensionality: 6 + 5 = 1
+  unsigned long num_params() const override;
 };
 
 }  // xreg

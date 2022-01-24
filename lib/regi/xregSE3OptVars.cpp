@@ -80,7 +80,7 @@ xreg::SE3OptVarsEuler::operator()(const PtN& x) const
 
   return T;
 }
-  
+
 unsigned long xreg::SE3OptVarsEuler::num_params() const
 {
   return 6;
@@ -135,7 +135,7 @@ xreg::SE3OptVarsLieAlg::operator()(const PtN& x) const
 
   return T;
 }
-  
+
 unsigned long xreg::SE3OptVarsLieAlg::num_params() const
 {
   return 6;
@@ -178,7 +178,7 @@ xreg::SE3OptVarsTransOnly::operator()(const PtN& x) const
 
   return T;
 }
-  
+
 unsigned long xreg::SE3OptVarsTransOnly::num_params() const
 {
   return num_comps_;
@@ -198,15 +198,15 @@ bool xreg::SE3OptVarsTransOnly::use_z() const
 {
   return use_z_;
 }
-  
+
 xreg::SE3OptVarsTransXOnly::SE3OptVarsTransXOnly()
   : SE3OptVarsTransOnly(true, false, false)
 { }
-  
+
 xreg::SE3OptVarsTransYOnly::SE3OptVarsTransYOnly()
   : SE3OptVarsTransOnly(false, true, false)
 { }
-  
+
 xreg::SE3OptVarsTransZOnly::SE3OptVarsTransZOnly()
   : SE3OptVarsTransOnly(false, false, true)
 { }
@@ -222,7 +222,7 @@ xreg::SO3OptVarsLieAlg::operator()(const PtN& x) const
 
   return H;
 }
-  
+
 unsigned long xreg::SO3OptVarsLieAlg::num_params() const
 {
   return 3;
@@ -288,7 +288,7 @@ unsigned long xreg::SO3OptVarsEuler::lookup_xform_idx(const unsigned long k) con
 
   return it - param_idx_.begin();
 }
-  
+
 xreg::FrameTransform xreg::SO3OptVarsOnlyX::operator()(const PtN& x) const
 {
   xregASSERT(x.size() == 1);
@@ -302,7 +302,7 @@ unsigned long xreg::SO3OptVarsOnlyX::num_params() const
 {
   return 1;
 }
-  
+
 xreg::FrameTransform xreg::SO3OptVarsOnlyY::operator()(const PtN& x) const
 {
   FrameTransform xform;
@@ -314,7 +314,7 @@ unsigned long xreg::SO3OptVarsOnlyY::num_params() const
 {
   return 1;
 }
-  
+
 xreg::FrameTransform xreg::SO3OptVarsOnlyZ::operator()(const PtN& x) const
 {
   FrameTransform xform;
@@ -337,7 +337,7 @@ xreg::FrameTransform xreg::CamSourceObjPoseOptVars::obj_pose(const PtN& x) const
 
   FrameTransform T;
   T.matrix() = ExpSE3(Pt6(x.tail(6)));
-  
+
   return T;
 }
 
@@ -350,7 +350,7 @@ xreg::CameraModel xreg::CamSourceObjPoseOptVars::cam(const PtN& x) const
 
 xreg::FrameTransform xreg::CamSourceObjPoseOptVars::operator()(const PtN& x) const
 {
-  return obj_pose(x);  
+  return obj_pose(x);
 }
 
 unsigned long xreg::CamSourceObjPoseOptVars::num_params() const
@@ -358,3 +358,18 @@ unsigned long xreg::CamSourceObjPoseOptVars::num_params() const
   return 9;
 }
 
+xreg::FrameTransform xreg::SnakeOptVars::operator()(const PtN& x) const
+{
+  xregASSERT(x.size() == 6);
+
+  FrameTransform T;
+
+  T.matrix() = ExpSE3(Pt6(x));
+
+  return T;
+}
+
+unsigned long xreg::SnakeOptVars::num_params() const
+{
+  return 6;
+}
