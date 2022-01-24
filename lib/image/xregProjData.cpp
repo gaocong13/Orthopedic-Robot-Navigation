@@ -40,13 +40,13 @@ ProjData<tPixelScalar>
 DownsampleProjDataHelper(const ProjData<tPixelScalar>& src_proj, const CoordScalar ds_factor)
 {
   ProjData<tPixelScalar> dst_proj;
- 
-  dst_proj.cam = DownsampleCameraModel(src_proj.cam, ds_factor); 
+
+  dst_proj.cam = DownsampleCameraModel(src_proj.cam, ds_factor);
 
   if (src_proj.img)
   {
     dst_proj.img = DownsampleImage(src_proj.img.GetPointer(), ds_factor);
-    
+
     const auto ds_sz = dst_proj.img->GetLargestPossibleRegion().GetSize();
     xregASSERT(ds_sz[0] == dst_proj.cam.num_det_cols);
     xregASSERT(ds_sz[1] == dst_proj.cam.num_det_rows);
@@ -57,7 +57,7 @@ DownsampleProjDataHelper(const ProjData<tPixelScalar>& src_proj, const CoordScal
     dst_proj.landmarks.insert(LandMap2::value_type(src_land.first,
                 LandMap2::mapped_type(src_land.second * ds_factor)));
   }
-  
+
   dst_proj.rot_to_pat_up = src_proj.rot_to_pat_up;
 
   return dst_proj;
@@ -258,13 +258,13 @@ MakeImageFromCam(const CameraModel& cam)
   using ImgPtr = typename Img::Pointer;
 
   ImgPtr img = Img::New();
-  
+
   typename Img::RegionType reg;
   reg.SetIndex(0, 0);
   reg.SetIndex(1, 0);
   reg.SetSize(0, cam.num_det_cols);
   reg.SetSize(1, cam.num_det_rows);
-  
+
   img->SetRegions(reg);
 
   std::array<double,2> sp = { cam.det_col_spacing, cam.det_row_spacing };
@@ -500,20 +500,20 @@ CropBoundaryPixelsHelper(const CameraModel& src_cam, const itk::Image<tPixelScal
                          const size_type boundary_width)
 {
   using PixelScalar = tPixelScalar;
-  
+
   const auto dst_cam = UpdateCameraModelFor2DROI(src_cam, boundary_width, boundary_width,
                                                  src_cam.num_det_cols - boundary_width - 1,
-                                                 src_cam.num_det_rows - boundary_width - 1); 
+                                                 src_cam.num_det_rows - boundary_width - 1);
 
   typename itk::Image<PixelScalar,2>::Pointer dst_img;
-  
+
   if (src_img)
   {
     const auto src_img_size = src_img->GetLargestPossibleRegion().GetSize();
     xregASSERT((src_img_size[0] == src_cam.num_det_cols) && (src_img_size[1] == src_cam.num_det_rows));
 
     dst_img = CropImage2DBoundary(src_img, boundary_width);
-    
+
     const auto dst_img_size = dst_img->GetLargestPossibleRegion().GetSize();
     xregASSERT(dst_img_size[0] == dst_cam.num_det_cols);
     xregASSERT(dst_img_size[1] == dst_cam.num_det_rows);
@@ -538,3 +538,47 @@ xreg::CropBoundaryPixels(const CameraModel& src_cam, const itk::Image<float,2>* 
   return CropBoundaryPixelsHelper(src_cam, src_img, boundary_width);
 }
 
+namespace  // un-named
+{
+
+template <class tPixelScalar>
+std::tuple<CameraModel, typename itk::Image<tPixelScalar,2>::Pointer>
+CropROIPixelsHelper(const CameraModel& src_cam, const itk::Image<tPixelScalar,2>* src_img,
+                    const Eigen::Matrix<Float,2,1> ld1, const Eigen::Matrix<Float,2,1> ld2)
+{
+  using PixelScalar = tPixelScalar;
+
+  const auto dst_cam = UpdateCameraModelFor2DROI(src_cam, ld1[0], ld1[1], ld2[0], ld2[1]);
+
+  typename itk::Image<PixelScalar,2>::Pointer dst_img;
+
+  if (src_img)
+  {
+    const auto src_img_size = src_img->GetLargestPossibleRegion().GetSize();
+    xregASSERT((src_img_size[0] == src_cam.num_det_cols) && (src_img_size[1] == src_cam.num_det_rows));
+
+    dst_img = CropImage2DLandmarks(src_img, ld1, ld2);
+
+    const auto dst_img_size = dst_img->GetLargestPossibleRegion().GetSize();
+    xregASSERT(dst_img_size[0] == dst_cam.num_det_cols);
+    xregASSERT(dst_img_size[1] == dst_cam.num_det_rows);
+  }
+
+  return std::make_tuple(dst_cam, dst_img);
+}
+
+}
+
+std::tuple<xreg::CameraModel, itk::Image<unsigned short,2>::Pointer>
+xreg::CropROIPixels(const CameraModel& src_cam, const itk::Image<unsigned short,2>* src_img,
+                    const Eigen::Matrix<Float,2,1> ld1, const Eigen::Matrix<Float,2,1> ld2)
+{
+  return CropROIPixelsHelper(src_cam, src_img, ld1, ld2);
+}
+
+std::tuple<xreg::CameraModel, itk::Image<float,2>::Pointer>
+xreg::CropROIPixels(const CameraModel& src_cam, const itk::Image<float,2>* src_img,
+                    const Eigen::Matrix<Float,2,1> ld1, const Eigen::Matrix<Float,2,1> ld2)
+{
+  return CropROIPixelsHelper(src_cam, src_img, ld1, ld2);
+}

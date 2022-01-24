@@ -36,7 +36,7 @@ namespace xreg
 
 // Forward declarations:
 struct CIOSFusionDICOMInfo;
-  
+
 enum class ProjDataRotToPatUp
 {
   kZERO = 0,
@@ -231,8 +231,15 @@ std::tuple<CameraModel, itk::Image<float,2>::Pointer>
 CropBoundaryPixels(const CameraModel& src_cam, const itk::Image<float,2>* src_img,
                    const size_type boundary_width = 20);
 
+std::tuple<CameraModel, itk::Image<unsigned short,2>::Pointer>
+CropROIPixels(const CameraModel& src_cam, const itk::Image<unsigned short,2>* src_img,
+             const Eigen::Matrix<Float,2,1> ld1, const Eigen::Matrix<Float,2,1> ld2);
+
+std::tuple<CameraModel, itk::Image<float,2>::Pointer>
+CropROIPixels(const CameraModel& src_cam, const itk::Image<float,2>* src_img,
+            const Eigen::Matrix<Float,2,1> ld1, const Eigen::Matrix<Float,2,1> ld2);
+
 
 }  // xreg
 
 #endif
-
