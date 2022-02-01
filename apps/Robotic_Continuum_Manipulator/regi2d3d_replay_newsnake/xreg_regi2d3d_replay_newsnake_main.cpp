@@ -65,6 +65,8 @@ using ListOfMatLists             = std::vector<MatList>;
 using ListOfListOfMatLists       = std::vector<ListOfMatLists>;
 using ListOfListOfListOfMatLists = std::vector<ListOfListOfMatLists>;
 
+const size_type num_segs = 28;
+
 void ComputeProjs(RayCaster& rc, const FrameTransformList& poses, const IndexList& vol_inds, ProjList& projs)
 {
   const size_type num_views = projs.size();
@@ -75,7 +77,7 @@ void ComputeProjs(RayCaster& rc, const FrameTransformList& poses, const IndexLis
 
   rc.use_proj_store_replace_method();
 
-  for (size_type vol_idx = 0; vol_idx < num_vols/num_views; ++vol_idx)
+  for (size_type vol_idx = 0; vol_idx < num_segs; ++vol_idx)
   {
     const size_type cur_obj_idx = vol_inds[vol_idx];
     xregASSERT(cur_obj_idx < poses.size());
