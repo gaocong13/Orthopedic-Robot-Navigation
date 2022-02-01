@@ -322,7 +322,8 @@ void xreg::Intensity2D3DRegiCMAESjustinsnake::run()
     }
 
     // compute the DRRs and similarities
-    this->snake_obj_fn(pop_params, &sim_vals, nv);
+    // this->snake_obj_fn(pop_params, &sim_vals, nv);
+    this->obj_fn(pop_params, &sim_vals);
 
     // copy similarities from intermediate storage
     std::copy(sim_vals.begin(), sim_vals.end(), obj_fn_vals);
