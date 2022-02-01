@@ -84,6 +84,22 @@ xreg::Mat4x4 xreg::ExpSE3(const Pt6& x)
   return ExpSE3(M);
 }
 
+xreg::Mat3x3 xreg::ExpPtToRot3x3(const Pt3& x)
+{
+  Mat3x3 W = SkewMatrix(x);
+
+  Mat3x3 T = Mat3x3::Identity();
+
+  const CoordScalar theta = WedgeSkew(W).norm();
+  if (theta > 1.0e-14)
+  {
+    // Exponentiate to get the rotation component
+    T = ExpSO3(W);
+  }
+
+  return T;
+}
+
 xreg::Pt6 xreg::ExpRigid4x4ToPt6(const Mat4x4& T)
 {
   Pt6 x;

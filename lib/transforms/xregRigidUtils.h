@@ -47,6 +47,8 @@ Mat4x4 ExpSE3(const Mat4x4& M);
 /// to the corresponding element in the SE(3) Lie Group.
 Mat4x4 ExpSE3(const Pt6& x);
 
+Mat3x3 ExpPtToRot3x3(const Pt3& x);
+
 Pt6 ExpRigid4x4ToPt6(const Mat4x4& T);
 
 /// \brief SE(3) -> se(3) logarithm
