@@ -1,6 +1,6 @@
 // STD
-// #include <iostream>
-// #include <vector>
+#include <iostream>
+#include <vector>
 
 #include <fmt/format.h>
 #include <fmt/printf.h>
@@ -268,7 +268,7 @@ int main(int argc, char* argv[])
   const std::string output_path       = po.pos_args()[2];
 
   const bool kSAVE_REGI_DEBUG         = po.get("save-debug-file");
-  const size_type num_exp = 5;
+  const size_type num_exp = 1;//5
   const size_type iter_mod = 10;
   const int radius = 5;
 
