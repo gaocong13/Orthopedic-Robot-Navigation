@@ -21,6 +21,7 @@
 # SOFTWARE.
 
 add_subdirectory(Femoroplasty)
+add_subdirectory(Osteonecrosis)
 add_subdirectory(Carm_PolarisMarker_Calibration)
 add_subdirectory(Carm_Xray_Simulation)
 add_subdirectory(Robotic_Injection_Device)
