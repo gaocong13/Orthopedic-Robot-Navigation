@@ -1,0 +1,2 @@
+add_subdirectory(autocarm_pelvis_kwire_triangulation)
+

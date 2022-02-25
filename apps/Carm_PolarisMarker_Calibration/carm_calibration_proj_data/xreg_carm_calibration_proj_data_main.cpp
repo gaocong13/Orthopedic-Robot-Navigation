@@ -56,8 +56,7 @@ int main(int argc, char* argv[])
 
   xregPROG_OPTS_SET_COMPILE_DATE(po);
 
-  po.set_help("Generate IPCAI data groundtruth h5 file by projecting each specimen CT"
-              "to lands and segs using groundtruth pelvis pose.");
+  po.set_help("Generate H5 projection data of the calibration images");
 
   po.set_arg_usage("<exp ID list> <pnp path> <img path> <output path>");
   po.set_min_num_pos_args(4);
