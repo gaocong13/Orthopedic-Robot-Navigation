@@ -1,2 +1,4 @@
 add_subdirectory(autocarm_pelvis_kwire_triangulation)
 add_subdirectory(autocarm_reproj_jigpts)
+add_subdirectory(autocarm_fidest_multiview_pelvis_regi)
+add_subdirectory(autocarm_singleview_pelvis_regi)
