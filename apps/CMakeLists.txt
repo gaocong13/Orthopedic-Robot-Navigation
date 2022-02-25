@@ -26,4 +26,5 @@ add_subdirectory(Carm_PolarisMarker_Calibration)
 add_subdirectory(Carm_Xray_Simulation)
 add_subdirectory(Robotic_Injection_Device)
 add_subdirectory(Robotic_Continuum_Manipulator)
+add_subdirectory(Autonomous_Carm)
 

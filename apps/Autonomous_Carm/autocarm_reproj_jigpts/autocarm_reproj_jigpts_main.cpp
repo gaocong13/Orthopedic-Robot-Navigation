@@ -81,6 +81,45 @@ FrameTransform ConvertSlicerToITK(std::vector<float> slicer_vec){
   return ITK_xform;
 }
 
+// Manually annotated polaris fiducial marker center in each 2D X-ray image
+std::vector< std::vector<float> > fid_center_annot{
+  { 573.5, 1059.5, 799.5, 609.5, 1256.5, 892.5, 949.5, 1233.5 },
+  { 513.5, 1067.5, 745.5, 593.5, 1193.5, 891.5, 894.5, 1243.5 },
+  { 509.5, 1076.5, 736.5, 587.5, 1163.5, 890.5, 877.5, 1253.5 },
+  { 611.5, 1079.5, 826.5, 580.5, 1217.5, 887.5, 954.5, 1257.5 },
+  { 628.5, 1090.5, 828.5, 575.5, 1190.5, 892.5, 949.5, 1268.5 },
+  { 900.5, 1082.5, 1066.5, 580.5, 1358.5, 885.5, 1161.5, 1255.5 },
+  { 1064.5, 1068.5, 1198.5, 578.5, 1427.5, 876.5, 1271.5, 1237.5 },
+  { 1132.5, 1069.5, 1224.5, 579.5, 1379.5, 875.5, 1271.5, 1232.5 },
+  { 771.5, 894.5, 987.5, 477.5, 1421.5, 756.5, 1118.5, 1073.5 },
+  { 306.5, 615.5, 505.5, 161.5, 978.5, 421.5, 688.5, 772.5 },
+  { 516.5, 1085.5, 698.5, 611.5, 1161.5, 873.5, 903.5, 1238.5 },
+  { 646.5, 652.5, 879.5, 188.5, 1305.5, 467.5, 1004.5, 813.5 },
+  { 552.5, 1002.5, 804.5, 553.5, 1204.5, 810.5, 894.5, 1143.5 },
+  { 453.5, 1009.5, 725.5, 540.5, 1085.5, 809.5, 774.5, 1154.5 },
+  { 595.5, 1019.5, 865.5, 539.5, 1144.5, 810.5, 857.5, 1162.5 },
+  { 572.5, 1029.5, 842.5, 525.5, 1045.5, 810.5, 776.5, 1177.5 },
+  { 596.5, 1043.5, 859.5, 518.5, 986.5, 811.5, 744.5, 1193.5 },
+  { 577.5, 848.5, 893.5, 351.5, 988.5, 650.5, 708.5, 1007.5 },
+  { 655.5, 903.5, 976.5, 419.5, 1148.5, 704.5, 845.5, 1052.5 },
+  { 656.5, 899.5, 974.5, 430.5, 1210.5, 707.5, 893.5, 1046.5 },
+  { 685.5, 892.5, 993.5, 438.5, 1286.5, 708.5, 959.5, 1035.5 },
+  { 755.5, 889.5, 1046.5, 451.5, 1395.5, 710.5, 1067.5, 1030.5 },
+  { 801.5, 1033.5, 1061.5, 583.5, 1440.5, 840.5, 1130.5, 1174.5 },
+  { 574.5, 1031.5, 817.5, 584.5, 1248.5, 842.5, 935.5, 1175.5 },
+  { 562.5, 1019.5, 771.5, 594.5, 1228.5, 842.5, 931.5, 1163.5 },
+  { 383.5, 1006.5, 540.5, 601.5, 994.5, 839.5, 734.5, 1145.5 },
+  { 416.5, 1147.5, 570.5, 731.5, 1032.5, 981.5, 777.5, 1299.5 },
+  { 519.5, 943.5, 626.5, 505.5, 1057.5, 667.5, 854.5, 1036.5 },
+  { 387.5, 829.5, 448.5, 370.5, 917.5, 542.5, 740.5, 924.5 },
+  { 530.5, 979.5, 643.5, 535.5, 1042.5, 700.5, 837.5, 1078.5} };
+
+// 4 polaris marker center coordinates in marker origin frame
+Pt3 polaris1_pt_3d = { 68.8633f,     68.7579f,      0.0337f }; // #1
+Pt3 polaris2_pt_3d = { 74.7105f,     0.0000f,     -0.0252f };  // #2
+Pt3 polaris3_pt_3d = { 0.0000f,      0.0000f,      0.0287f };  // #3
+Pt3 polaris4_pt_3d = { 11.8127f,     62.1510f,     -0.0373f }; // #4
+
 int main(int argc, char* argv[])
 {
   ProgOpts po;
@@ -88,8 +127,9 @@ int main(int argc, char* argv[])
   xregPROG_OPTS_SET_COMPILE_DATE(po);
 
   po.set_help("Single view registration of the pelvis and femur. Femur registration is initialized by pelvis registration.");
-  po.set_arg_usage("< Meta data path > < pelvis X-ray name txt file > < calibration X-ray name txt file > < 2D landmark pelvis landmark annotation folder > "
-                   "< pelvis X-ray image DCM folder > < calibration X-ray image DCM folder > < handeyeX > < Tracker data folder > < output folder >");
+  po.set_arg_usage("< Meta data path > < pelvis X-ray name txt file > < calibration X-ray name txt file > < pelvis registration xform > "
+                   "< pelvis X-ray image DCM folder > < calibration X-ray image DCM folder > < handeyeX > < Tracker data folder >"
+                   "< marker pnp xform folder > < output folder >");
   po.set_min_num_pos_args(5);
 
   po.add("pelvis-label", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_UINT32, "pelvis-label",
@@ -122,12 +162,13 @@ int main(int argc, char* argv[])
   const std::string meta_data_path               = po.pos_args()[0];  // Meta Data Folder containing CT, Segmentation and 3D landmark annotations
   const std::string pelvis_xray_id_txt_path      = po.pos_args()[1];  // Experiment list file path, containing name of the pelvis X-ray image
   const std::string calibration_xray_id_txt_path = po.pos_args()[2];  // Experiment list file path, containing name of the calibration X-ray image
-  const std::string landmark2d_root_path         = po.pos_args()[3];  // 2D Landmark folder path, containing annotations with the name of "pelvis***.fcsv"
+  const std::string pelvis_regi_xform_path       = po.pos_args()[3];  // Pelvis registration transformation in 1st image view
   const std::string pelvis_dicom_path            = po.pos_args()[4];  // Pelvis Dicom X-ray image folder path
   const std::string calibration_dicom_path       = po.pos_args()[5];  // Dicom X-ray image folder path
   const std::string handeyeX_path                = po.pos_args()[6];  // Path to handeyeX matrix
   const std::string calibraion_tracker_path      = po.pos_args()[7];  // Path to calibration tracker data
-  const std::string output_path                  = po.pos_args()[8];  // Output path
+  const std::string marker_pnp_path              = po.pos_args()[8];  // Path to pnp xform folder
+  const std::string output_path                  = po.pos_args()[9];  // Output path
 
   const std::string spec_vol_path = meta_data_path + "/Spec22-2181-CT-Bone-1mm.nii.gz";
   const std::string spec_seg_path = meta_data_path + "/Spec22-2181-Seg-Bone-1mm.nii.gz";
@@ -159,27 +200,6 @@ int main(int argc, char* argv[])
 
   vout << "extracting pelvis att. volume..." << std::endl;
   auto pelvis_vol = ApplyMaskToITKImage(vol_att.GetPointer(), vol_seg.GetPointer(), pelvis_label, float(0), true);
-
-  std::shared_ptr<MultiLevelMultiObjRegi::CamAlignRefFrameWithCurPose> pelvis_singleview_regi_ref_frame;
-  {
-    itk::ContinuousIndex<double,3> center_idx;
-
-    auto pelvis_fcsv_rotc = pelvis_3d_fcsv.find("pelvis-cen");
-    Pt3 rotcenter;
-
-    if (pelvis_fcsv_rotc != pelvis_3d_fcsv.end()){
-      rotcenter = pelvis_fcsv_rotc->second;
-    }
-    else{
-      vout << "ERROR: NOT FOUND pelvis rotation center" << std::endl;
-    }
-
-    pelvis_singleview_regi_ref_frame = std::make_shared<MultiLevelMultiObjRegi::CamAlignRefFrameWithCurPose>();
-    pelvis_singleview_regi_ref_frame->vol_idx = 0;
-    pelvis_singleview_regi_ref_frame->center_of_rot_wrt_vol[0] = rotcenter[0];
-    pelvis_singleview_regi_ref_frame->center_of_rot_wrt_vol[1] = rotcenter[1];
-    pelvis_singleview_regi_ref_frame->center_of_rot_wrt_vol[2] = rotcenter[2];
-  }
 
   // Read Pelvis X-ray Image
   std::vector<std::string> pelvis_xray_ID_list;
@@ -227,14 +247,13 @@ int main(int argc, char* argv[])
 
   const auto default_cam = NaiveCamModelFromCIOSFusion(MakeNaiveCIOSFusionMetaDR(), true);
 
-  const std::string pel_xray_ID                   = pelvis_xray_ID_list[0];
-  const std::string pelvis_landmark_2d_fcsv_path  = landmark2d_root_path + "/pelvis" + pel_xray_ID + ".fcsv";
-  const std::string pelvis_img_path               = pelvis_dicom_path + "/" + pel_xray_ID;
+  const std::string pel_xray_ID      = pelvis_xray_ID_list[0];
+  const std::string pelvis_img_path  = pelvis_dicom_path + "/" + pel_xray_ID;
 
-  const std::string cal_xray_01_ID       = calibration_xray_ID_list[0];
-  const std::string cal_xray_02_ID       = calibration_xray_ID_list[1];
-  const std::string cal_img_01_path      = calibration_dicom_path + "/" + cal_xray_01_ID;
-  const std::string cal_img_02_path      = calibration_dicom_path + "/" + cal_xray_02_ID;
+  const std::string cal_xray_01_ID   = calibration_xray_ID_list[0];
+  const std::string cal_xray_02_ID   = calibration_xray_ID_list[1];
+  const std::string cal_img_01_path  = calibration_dicom_path + "/" + cal_xray_01_ID;
+  const std::string cal_img_02_path  = calibration_dicom_path + "/" + cal_xray_02_ID;
 
   // Find relative geometry between cal img 01 and 02
   auto handeyeX_xform = ReadITKAffineTransformFromFile(handeyeX_path);
@@ -264,20 +283,15 @@ int main(int argc, char* argv[])
 
     FrameTransform RB4_wrt_CarmFid = RB4_xform.inverse() * CarmFid_xform;
     cal_RB4_wrt_CarmFid_xform_list.push_back(RB4_wrt_CarmFid);
+
+    const std::string pnp_xform_path = marker_pnp_path + "/pnp_xform" + calibration_xray_ID_list[cal_id] + ".h5";
+    FrameTransform pnp_xform = ReadITKAffineTransformFromFile(pnp_xform_path);
+    cal_pnp_xform_list.push_back(pnp_xform);
   }
 
   FrameTransform rel_carm_xform = handeyeX_xform.inverse() * cal_RB4_wrt_CarmFid_xform_list[0].inverse() * cal_RB4_wrt_CarmFid_xform_list[1] * handeyeX_xform;
   const std::string rel_carm_xform_file = output_path + "/rel_carm_xform.h5";
   WriteITKAffineTransform(rel_carm_xform_file, rel_carm_xform);
-
-  std::cout << "Running..." << pel_xray_ID << std::endl;
-  auto pelvis_landmark_2d_fcsv = ReadFCSVFileNamePtMap(pelvis_landmark_2d_fcsv_path);
-  ConvertRASToLPS(&pelvis_landmark_2d_fcsv);
-
-  xregASSERT(pelvis_landmark_2d_fcsv.size() > 3);
-
-  ProjPreProc proj_pre_proc;
-  proj_pre_proc.input_projs.resize(1);
 
   ProjDataF32 pel_img;
   ProjDataF32 cal_img01;
@@ -287,195 +301,78 @@ int main(int argc, char* argv[])
     std::tie(pel_img.img, pel_cios_metas[0]) = ReadCIOSFusionDICOMFloat(pelvis_img_path);
     std::tie(cal_img01.img, cal_cios_metas[0]) = ReadCIOSFusionDICOMFloat(cal_img_01_path);
     std::tie(cal_img02.img, cal_cios_metas[0]) = ReadCIOSFusionDICOMFloat(cal_img_02_path);
-
-    proj_pre_proc.input_projs[0].cam = NaiveCamModelFromCIOSFusion(pel_cios_metas[0], true);
   }
 
   // Artificually add two images together for the first calibration image
   vout << "Adding pelvis and calibration images ..." << std::endl;
-  proj_pre_proc.input_projs[0].img = ITKAddImages(pel_img.img.GetPointer(), cal_img01.img.GetPointer());
+  pel_img.img = ITKAddImages(pel_img.img.GetPointer(), cal_img01.img.GetPointer());
+  WriteITKImageRemap8bpp(pel_img.img.GetPointer(), output_path + "/real" + pel_xray_ID + ".png");
 
+  FrameTransform pelvis_regi_xform = ReadITKAffineTransformFromFile(pelvis_regi_xform_path);
+
+  FrameTransform pelvis_carm2_xform = pelvis_regi_xform * rel_carm_xform;
   {
-    UpdateLandmarkMapForCIOSFusion(cal_cios_metas[0], &pelvis_landmark_2d_fcsv);
+    auto ray_caster = LineIntRayCasterFromProgOpts(po);
+    ray_caster->set_camera_model(default_cam);
+    ray_caster->use_proj_store_replace_method();
+    ray_caster->set_volume(vol_att);
+    ray_caster->set_num_projs(1);
+    ray_caster->allocate_resources();
+    ray_caster->xform_cam_to_itk_phys(0) = pelvis_carm2_xform;
+    ray_caster->compute(0);
+    // pel_carm2_drr->SetSpacing(cal_img02.img->GetSpacing());
 
-    auto& pelvis_proj_lands = proj_pre_proc.input_projs[0].landmarks;
-    pelvis_proj_lands.reserve(pelvis_landmark_2d_fcsv.size());
-
-    for (const auto& fcsv_kv : pelvis_landmark_2d_fcsv)
-    {
-      pelvis_proj_lands.emplace(fcsv_kv.first, Pt2{ fcsv_kv.second[0], fcsv_kv.second[1] });
-    }
+    // auto added_pel_cal_carm2 = ITKAddImages(pel_carm2_drr, cal_img02.img.GetPointer());
+    WriteITKImageRemap8bpp(ray_caster->proj(0).GetPointer(), output_path + "/carm2_pelvis_drr.png");
+    WriteITKImageRemap8bpp(cal_img02.img.GetPointer(), output_path + "/real_calibration_02.png");
   }
 
-  proj_pre_proc();
-  auto& projs_to_regi = proj_pre_proc.output_projs;
+  //Reproject 3D marker landmark using 1st view pnp xform and 2nd view rel_carm_xform
+  std::ofstream marker_reproj_file;
+  marker_reproj_file.open(output_path + "/marker_reproj.txt", std::ios::trunc);
 
-  vout << "running initialization..." << std::endl;
-
-  FrameTransform init_cam_to_pelvis = PnPPOSITAndReprojCMAES(projs_to_regi[0].cam, pelvis_3d_fcsv, projs_to_regi[0].landmarks);
-
-  WriteITKAffineTransform(output_path + "/pelvis_singleview_init_xform" + pel_xray_ID + ".h5", init_cam_to_pelvis);
-
-  const size_type view_idx = 0;
-
-  MultiLevelMultiObjRegi regi;
-
-  regi.set_debug_output_stream(vout, verbose);
-  regi.set_save_debug_info(kSAVE_REGI_DEBUG);
-  regi.vols = { pelvis_vol };
-  regi.vol_names = { "pelvis" };
-
-  regi.ref_frames = { pelvis_singleview_regi_ref_frame };
-
-  regi.fixed_proj_data = proj_pre_proc.output_projs;
-
-  pelvis_singleview_regi_ref_frame->cam_extrins = regi.fixed_proj_data[view_idx].cam.extrins;
-
-  regi.levels.resize(1);
-
-  // Pelvis Registration First
+  for(size_type idx = 0; idx < calibration_xray_ID_list.size(); ++idx)
   {
-    regi.init_cam_to_vols = { init_cam_to_pelvis };
+    FrameTransform marker_xform;
+    if(idx == 0)
+      marker_xform = cal_pnp_xform_list[0];
+    else
+      marker_xform = cal_pnp_xform_list[0] * rel_carm_xform;
 
-    auto& lvl = regi.levels[0];
+    Pt3 polaris1_reproj = default_cam.intrins * default_cam.extrins * marker_xform.inverse() * polaris1_pt_3d;
+    Pt3 polaris2_reproj = default_cam.intrins * default_cam.extrins * marker_xform.inverse() * polaris2_pt_3d;
+    Pt3 polaris3_reproj = default_cam.intrins * default_cam.extrins * marker_xform.inverse() * polaris3_pt_3d;
+    Pt3 polaris4_reproj = default_cam.intrins * default_cam.extrins * marker_xform.inverse() * polaris4_pt_3d;
 
-    lvl.ds_factor = 0.25;
-
-    lvl.fixed_imgs_to_use = { view_idx };
-
-    lvl.ray_caster = LineIntRayCasterFromProgOpts(po);
-
-    {
-      auto sm = PatchGradNCCSimMetricFromProgOpts(po);
-
-      {
-        auto* grad_sm = dynamic_cast<ImgSimMetric2DGradImgParamInterface*>(sm.get());
-
-        grad_sm->set_smooth_img_before_sobel_kernel_radius(5);
-      }
-
-      {
-        auto* patch_sm = dynamic_cast<ImgSimMetric2DPatchCommon*>(sm.get());
-        xregASSERT(patch_sm);
-
-        patch_sm->set_patch_radius(std::lround(lvl.ds_factor * 41));
-        patch_sm->set_patch_stride(1);
-      }
-
-      lvl.sim_metrics.push_back(sm);
-    }
-
-    lvl.regis.resize(1);
-
-    {
-      auto& lvl_regi_coarse = lvl.regis[0];
-      lvl_regi_coarse.mov_vols = { 0 };
-      lvl_regi_coarse.static_vols = { };
-
-      auto pelvis_guess = std::make_shared<MultiLevelMultiObjRegi::Level::SingleRegi::InitPosePrevPoseEst>();
-      pelvis_guess->vol_idx = 0;
-
-      lvl_regi_coarse.init_mov_vol_poses = { pelvis_guess };
-
-      lvl_regi_coarse.ref_frames = { 0 }; // This refers to pelvis (moving)
-      {
-        auto cmaes_regi = std::make_shared<Intensity2D3DRegiCMAES>();
-        cmaes_regi->set_opt_vars(se3_vars);
-        cmaes_regi->set_opt_x_tol(0.01);
-        cmaes_regi->set_opt_obj_fn_tol(0.01);
-
-        auto pen_fn = std::make_shared<Regi2D3DPenaltyFnSE3Mag>();
-
-        pen_fn->rot_pdfs_per_obj   = { std::make_shared<FoldNormDist>(10 * kDEG2RAD, 10 * kDEG2RAD) };
-
-        pen_fn->trans_pdfs_per_obj = { std::make_shared<FoldNormDist>(20, 20) };
-
-        cmaes_regi->set_pop_size(150);
-        cmaes_regi->set_sigma({ 3 * kDEG2RAD, 3 * kDEG2RAD, 3 * kDEG2RAD, 5, 5, 10 });
-
-        cmaes_regi->set_penalty_fn(pen_fn);
-        cmaes_regi->set_img_sim_penalty_coefs(0.9, 1.0);
-
-        lvl_regi_coarse.regi = cmaes_regi;
-      }
-    }
-
-    if (kSAVE_REGI_DEBUG )
-    {
-      // Create Debug Proj H5 File
-      const std::string proj_data_h5_path = output_path + "/pelvis_singleview_proj_data" + pel_xray_ID + ".h5";
-      vout << "creating H5 proj data file for img" + pel_xray_ID + "..." << std::endl;
-      H5::H5File h5(proj_data_h5_path, H5F_ACC_TRUNC);
-      WriteProjDataH5(regi.fixed_proj_data, &h5);
-
-      vout << "  setting regi debug info..." << std::endl;
-
-      DebugRegiResultsMultiLevel::VolPathInfo debug_vol_path;
-      debug_vol_path.vol_path = spec_vol_path;
-
-      if (use_seg)
-      {
-        debug_vol_path.label_vol_path = spec_seg_path;
-        debug_vol_path.labels_used    = { pelvis_label };
-      }
-
-      regi.debug_info->vols = { debug_vol_path };
-
-      DebugRegiResultsMultiLevel::ProjDataPathInfo debug_proj_path;
-      debug_proj_path.path = proj_data_h5_path;
-      // debug_proj_path.projs_used = { view_idx };
-
-      regi.debug_info->fixed_projs = debug_proj_path;
-
-      regi.debug_info->proj_pre_proc_info = proj_pre_proc.params;
-
-      regi.debug_info->regi_names = { { "Singleview Pelvis Femur" + pel_xray_ID } };
-    }
-
-    vout << std::endl << "Single view pelvis registration ..." << std::endl;
-    regi.run();
-    regi.levels[0].regis[0].fns_to_call_right_before_regi_run.clear();
-
-    if (kSAVE_REGI_DEBUG)
-    {
-      vout << "writing debug info to disk..." << std::endl;
-      const std::string dst_debug_path = output_path + "/debug_pelvis" + pel_xray_ID + ".h5";
-      WriteMultiLevel2D3DRegiDebugToDisk(*regi.debug_info, dst_debug_path);
-    }
-
-    FrameTransform pelvis_regi_xform = regi.cur_cam_to_vols[0];
-    WriteITKAffineTransform(output_path + "/pelvis_regi_xform.h5", pelvis_regi_xform);
-
-    {
-      auto ray_caster = LineIntRayCasterFromProgOpts(po);
-      ray_caster->set_camera_model(default_cam);
-      ray_caster->use_proj_store_replace_method();
-      ray_caster->set_volume(regi.vols[0]);
-      ray_caster->set_num_projs(1);
-      ray_caster->allocate_resources();
-      ray_caster->xform_cam_to_itk_phys(0) = pelvis_regi_xform;
-      ray_caster->compute(0);
-
-      WriteITKImageRemap8bpp(ray_caster->proj(0).GetPointer(), output_path + "/pelvis_reproj" + pel_xray_ID + ".png");
-      WriteITKImageRemap8bpp(proj_pre_proc.input_projs[0].img.GetPointer(), output_path + "/real" + pel_xray_ID + ".png");
-    }
-
-    FrameTransform pelvis_carm2_xform = pelvis_regi_xform * rel_carm_xform;
-    {
-      auto ray_caster = LineIntRayCasterFromProgOpts(po);
-      ray_caster->set_camera_model(default_cam);
-      ray_caster->use_proj_store_replace_method();
-      ray_caster->set_volume(vol_att);
-      ray_caster->set_num_projs(1);
-      ray_caster->allocate_resources();
-      ray_caster->xform_cam_to_itk_phys(0) = pelvis_carm2_xform;
-      ray_caster->compute(0);
-      // pel_carm2_drr->SetSpacing(cal_img02.img->GetSpacing());
-
-      // auto added_pel_cal_carm2 = ITKAddImages(pel_carm2_drr, cal_img02.img.GetPointer());
-      WriteITKImageRemap8bpp(ray_caster->proj(0).GetPointer(), output_path + "/carm2_pelvis_drr.png");
-      WriteITKImageRemap8bpp(cal_img02.img.GetPointer(), output_path + "/real_calibration_02.png");
-    }
+    // Difference of opencv convention image coordinate v.s. ITK
+    marker_reproj_file << 1536 - polaris1_reproj(0)/polaris1_reproj(2) << ' ' << 1536 - polaris1_reproj(1)/polaris1_reproj(2)
+                << ' ' << 1536 - polaris2_reproj(0)/polaris2_reproj(2) << ' ' << 1536 - polaris2_reproj(1)/polaris2_reproj(2)
+                << ' ' << 1536 - polaris3_reproj(0)/polaris3_reproj(2) << ' ' << 1536 - polaris3_reproj(1)/polaris3_reproj(2)
+                << ' ' << 1536 - polaris4_reproj(0)/polaris4_reproj(2) << ' ' << 1536 - polaris4_reproj(1)/polaris4_reproj(2)
+                << '\n';
   }
+
+  marker_reproj_file.close();
+
+  // Transform Polaris points to pelvis CT frame
+  {
+    FrameTransform marker_xform = cal_pnp_xform_list[0];
+    Pt3 polaris1_pelvis = pelvis_regi_xform * marker_xform.inverse() * polaris1_pt_3d;
+    Pt3 polaris2_pelvis = pelvis_regi_xform * marker_xform.inverse() * polaris2_pt_3d;
+    Pt3 polaris3_pelvis = pelvis_regi_xform * marker_xform.inverse() * polaris3_pt_3d;
+    Pt3 polaris4_pelvis = pelvis_regi_xform * marker_xform.inverse() * polaris4_pt_3d;
+
+    LandMap3 polaris_pts_map;
+    polaris_pts_map.emplace("polaris1", polaris1_pelvis);
+    polaris_pts_map.emplace("polaris2", polaris2_pelvis);
+    polaris_pts_map.emplace("polaris3", polaris3_pelvis);
+    polaris_pts_map.emplace("polaris4", polaris4_pelvis);
+
+    ConvertRASToLPS(&polaris_pts_map);
+
+    const std::string polaris_pelvis_fcsv_file = output_path + "/polaris_pts_pelvis.fcsv";
+    WriteFCSVFileFromNamePtMap(polaris_pelvis_fcsv_file, polaris_pts_map);
+  }
+
   return 0;
 }

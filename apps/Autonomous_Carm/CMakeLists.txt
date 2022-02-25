@@ -1,2 +1,2 @@
 add_subdirectory(autocarm_pelvis_kwire_triangulation)
-
+add_subdirectory(autocarm_reproj_jigpts)
