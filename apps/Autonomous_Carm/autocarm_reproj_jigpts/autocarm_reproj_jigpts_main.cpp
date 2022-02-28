@@ -352,6 +352,8 @@ int main(int argc, char* argv[])
                 << '\n';
   }
 
+  vout << default_cam.intrins << std::endl;
+
   marker_reproj_file.close();
 
   // Transform Polaris points to pelvis CT frame

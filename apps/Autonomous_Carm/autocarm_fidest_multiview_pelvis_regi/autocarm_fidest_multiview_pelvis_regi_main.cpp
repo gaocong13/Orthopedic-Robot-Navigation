@@ -301,8 +301,8 @@ int main(int argc, char* argv[])
 
   for(size_type view_idx = 0; view_idx < num_cal_views; ++view_idx)
   {
-    const std::string pelvis_img_path               = pelvis_dicom_path + "/" + pelvis_xray_ID_list[view_idx];
-    pel_xray_ID += "_" + pelvis_xray_ID_list[view_idx];
+    const std::string pelvis_img_path  = pelvis_dicom_path + "/" + calibration_xray_ID_list[view_idx];
+    pel_xray_ID += "_" + calibration_xray_ID_list[view_idx];
 
     std::tie(proj_pre_proc.input_projs[view_idx].img, pel_cios_metas[view_idx]) = ReadCIOSFusionDICOMFloat(pelvis_img_path);
     proj_pre_proc.input_projs[view_idx].cam = NaiveCamModelFromCIOSFusion(pel_cios_metas[view_idx], true);
@@ -460,6 +460,15 @@ int main(int argc, char* argv[])
 
       vout << "saving regi transformations ..." << std::endl;
       WriteITKAffineTransform(output_path + "/pelvis_mv_regi_xform.h5", pelvis_mv_regi_xform);
+
+      for (size_type view_idx = 0; view_idx < num_cal_views; ++view_idx)
+      {
+        FrameTransform pelvis_mv_regi_xform_defaultcam = rel_carm_xform_list[view_idx] * rel_carm_xform_list[0].inverse() * pelvis_mv_regi_xform * rel_carm_xform_list[0];
+
+        const std::string output_pel_regi_xform_name = use_fidest ? output_path + "/pelvis_mv_regi_xform_fidest" + calibration_xray_ID_list[view_idx] + ".h5"\
+         : output_path + "/pelvis_mv_regi_xform" + calibration_xray_ID_list[view_idx] + ".h5";
+        WriteITKAffineTransform(output_pel_regi_xform_name, pelvis_mv_regi_xform_defaultcam);
+      }
     }
   }
   return 0;
