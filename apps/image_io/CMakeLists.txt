@@ -20,14 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-add_subdirectory(Femoroplasty)
-add_subdirectory(Osteonecrosis)
-add_subdirectory(Carm_PolarisMarker_Calibration)
-add_subdirectory(Carm_Xray_Simulation)
-add_subdirectory(Robotic_Injection_Device)
-add_subdirectory(Robotic_Continuum_Manipulator)
-add_subdirectory(Autonomous_Carm)
-add_subdirectory(image_io)
-add_subdirectory(mesh)
-add_subdirectory(point_clouds)
-add_subdirectory(transforms)
+add_subdirectory(convert_resample_dicom)
+add_subdirectory(report_dicom)
+add_subdirectory(crop_vol)
+add_subdirectory(remap_and_tile_proj_data)
+add_subdirectory(extract_nii_from_proj_data)
+add_subdirectory(add_lands_to_proj_data)
+add_subdirectory(draw_xray_scene)
+add_subdirectory(regi2d3d_replay)
+add_subdirectory(regi2d3d_replay_multiconfig_device)
+
